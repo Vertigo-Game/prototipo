@@ -59,6 +59,10 @@ namespace HookPrototype
 
         public bool DashAvailable => dashAvailable;
         public bool IsPulling => pulling;
+        public bool CanInteract => !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
+
+        // Set while a sign is being read: the game is paused and gameplay input is ignored.
+        public bool InputLocked { get; set; }
 
         private void Awake()
         {
@@ -92,6 +96,13 @@ namespace HookPrototype
                 return;
             }
 
+            if (InputLocked)
+            {
+                moveInput = 0f;
+                previousHookHeld = ReadHookHeld();
+                return;
+            }
+
             moveInput = ReadHorizontal();
             if (Mathf.Abs(moveInput) > 0.1f)
             {
@@ -104,10 +115,14 @@ namespace HookPrototype
 
             if (pulling)
             {
-                if (hookPressed || ReadCancelPressed())
+                if (ReadCancelPressed())
                 {
                     ReleasePull();
                 }
+            }
+            else if (aiming && ReadCancelPressed())
+            {
+                CancelHook(true);
             }
             else
             {
@@ -544,13 +559,6 @@ namespace HookPrototype
                 fontSize = 28
             };
 
-            GUI.Box(new Rect(12f, 12f, 410f, 112f), GUIContent.none);
-            GUI.Label(new Rect(24f, 19f, 380f, 28f), "HOOK CLIMB — PROTÓTIPO", title);
-            GUI.Label(new Rect(24f, 48f, 390f, 72f),
-                "A/D: mover   Espaço: pular   Shift: dash (esquerda/direita)\n" +
-                "Segure botão esquerdo/E: mirar em slow motion\n" +
-                "Solte: lançar Hook   Pressione novamente: cancelar   R: reiniciar", text);
-
             string dashText = dashAvailable ? "DASH PRONTO" : "DASH GASTO";
             Color previousColor = GUI.color;
             GUI.color = dashAvailable ? new Color(0.3f, 1f, 0.7f) : new Color(1f, 0.45f, 0.45f);
@@ -608,10 +616,9 @@ namespace HookPrototype
         private static bool ReadHookHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return (Mouse.current != null && Mouse.current.leftButton.isPressed) ||
-                   (Keyboard.current != null && Keyboard.current.eKey.isPressed);
+            return Mouse.current != null && Mouse.current.leftButton.isPressed;
 #else
-            return Input.GetMouseButton(0) || Input.GetKey(KeyCode.E);
+            return Input.GetMouseButton(0);
 #endif
         }
 
@@ -628,7 +635,7 @@ namespace HookPrototype
         {
 #if ENABLE_INPUT_SYSTEM
             return (Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame) ||
-                   (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+                   (Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame);
 #else
             return Input.GetKeyDown(KeyCode.LeftShift);
 #endif
@@ -637,9 +644,9 @@ namespace HookPrototype
         private static bool ReadCancelPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+            return Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame;
 #else
-            return Input.GetKeyDown(KeyCode.Escape);
+            return Input.GetMouseButtonDown(1);
 #endif
         }
 
