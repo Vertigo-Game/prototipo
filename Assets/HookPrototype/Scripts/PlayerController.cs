@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -28,9 +29,19 @@ namespace HookPrototype
         [SerializeField] private float targetReachDistance = 0.72f;
         [SerializeField, Range(0.05f, 1f)] private float aimingTimeScale = 0.25f;
         [SerializeField] private float enemyBounceSpeed = 14f;
+        [SerializeField] private float momentumMinSpeed = 13f;
+        [SerializeField] private float momentumMaxSpeed = 22f;
+        [SerializeField] private float momentumDeceleration = 14f;
+        [SerializeField] private float momentumEndSpeed = 6f;
+
+        private static readonly int SpeedHash = Animator.StringToHash("Speed");
+        private static readonly int GroundedHash = Animator.StringToHash("Grounded");
+        private static readonly int HookModeHash = Animator.StringToHash("HookMode");
 
         private Rigidbody2D body;
         private Collider2D bodyCollider;
+        private Animator animator;
+        private SpriteRenderer visual;
         private LineRenderer aimLine;
         private HookTarget currentTarget;
         private Vector2 aimDirection = Vector2.up;
@@ -40,6 +51,9 @@ namespace HookPrototype
         private bool dashAvailable = true;
         private bool aiming;
         private bool pulling;
+        private bool hanging;
+        private bool coasting;
+        private float facing = 1f;
         private bool previousHookHeld;
         private bool completed;
 
@@ -51,6 +65,8 @@ namespace HookPrototype
             body = GetComponent<Rigidbody2D>();
             bodyCollider = GetComponent<Collider2D>();
             baseGravityScale = body.gravityScale;
+            animator = GetComponentInChildren<Animator>();
+            visual = animator != null ? animator.GetComponent<SpriteRenderer>() : null;
 
             aimLine = gameObject.AddComponent<LineRenderer>();
             aimLine.positionCount = 2;
@@ -77,6 +93,11 @@ namespace HookPrototype
             }
 
             moveInput = ReadHorizontal();
+            if (Mathf.Abs(moveInput) > 0.1f)
+            {
+                facing = Mathf.Sign(moveInput);
+            }
+
             bool hookHeld = ReadHookHeld();
             bool hookPressed = hookHeld && !previousHookHeld;
             bool hookReleased = !hookHeld && previousHookHeld;
@@ -85,7 +106,7 @@ namespace HookPrototype
             {
                 if (hookPressed || ReadCancelPressed())
                 {
-                    CancelHook(true);
+                    ReleasePull();
                 }
             }
             else
@@ -125,6 +146,7 @@ namespace HookPrototype
             }
 
             previousHookHeld = hookHeld;
+            UpdateAnimation();
         }
 
         private void FixedUpdate()
@@ -152,6 +174,12 @@ namespace HookPrototype
                 return;
             }
 
+            if (coasting)
+            {
+                Coast();
+                return;
+            }
+
             bool grounded = IsGrounded();
             if (grounded)
             {
@@ -162,6 +190,23 @@ namespace HookPrototype
             Vector2 velocity = body.linearVelocity;
             velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed, acceleration * Time.fixedDeltaTime);
             body.linearVelocity = velocity;
+        }
+
+        private void UpdateAnimation()
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            if (visual != null && Mathf.Abs(moveInput) > 0.1f)
+            {
+                visual.flipX = moveInput < 0f;
+            }
+
+            animator.SetFloat(SpeedHash, Mathf.Abs(body.linearVelocity.x));
+            animator.SetBool(GroundedHash, IsGrounded());
+            animator.SetBool(HookModeHash, aiming || pulling);
         }
 
         private void BeginAiming()
@@ -242,7 +287,7 @@ namespace HookPrototype
                     return true;
                 }
 
-                if (hit.collider.GetComponent<PrototypePlatform>() != null)
+                if (IsSolidSurface(hit.collider))
                 {
                     return false;
                 }
@@ -284,6 +329,17 @@ namespace HookPrototype
             }
 
             Vector2 targetPosition = currentTarget.transform.position;
+
+            if (hanging)
+            {
+                // Fixed points hold the player in place until the hook is cancelled.
+                body.position = targetPosition;
+                body.linearVelocity = Vector2.zero;
+                aimLine.SetPosition(0, targetPosition);
+                aimLine.SetPosition(1, targetPosition);
+                return;
+            }
+
             Vector2 toTarget = targetPosition - body.position;
             float distance = toTarget.magnitude;
 
@@ -312,13 +368,12 @@ namespace HookPrototype
             Vector2 incomingVelocity = body.linearVelocity;
             bool enemy = reachedTarget.IsEnemy;
 
-            pulling = false;
-            currentTarget = null;
-            aimLine.enabled = false;
-            body.gravityScale = baseGravityScale;
-
             if (enemy)
             {
+                pulling = false;
+                currentTarget = null;
+                aimLine.enabled = false;
+                body.gravityScale = baseGravityScale;
                 dashAvailable = true;
                 float steering = Mathf.Abs(moveInput) > 0.1f ? moveInput : Mathf.Sign(incomingVelocity.x);
                 body.linearVelocity = new Vector2(
@@ -328,16 +383,69 @@ namespace HookPrototype
             }
             else
             {
-                Vector2 releasedVelocity = incomingVelocity;
-                releasedVelocity.y = Mathf.Max(releasedVelocity.y, 5.5f);
-                body.linearVelocity = releasedVelocity;
+                hanging = true;
+                pulling = true;
+                currentTarget = reachedTarget;
+                body.gravityScale = 0f;
+                body.linearVelocity = Vector2.zero;
+                aimLine.enabled = true;
             }
+        }
+
+        private void ReleasePull()
+        {
+            bool wasHanging = hanging;
+            Vector2 velocity = body.linearVelocity;
+            Vector2 toTarget = currentTarget != null
+                ? (Vector2)currentTarget.transform.position - body.position
+                : Vector2.zero;
+            CancelHook(true);
+
+            if (wasHanging)
+            {
+                body.linearVelocity = Vector2.zero;
+                return;
+            }
+
+            // Cancelled while still accelerating: keep going forward with an impulse (momentum).
+            Vector2 direction = velocity.sqrMagnitude > 0.01f ? velocity.normalized : toTarget.normalized;
+            if (direction.sqrMagnitude < 0.01f)
+            {
+                return;
+            }
+
+            float speed = Mathf.Clamp(velocity.magnitude, momentumMinSpeed, momentumMaxSpeed);
+            coasting = true;
+            body.gravityScale = 0f;
+            body.linearVelocity = direction * speed;
+        }
+
+        private void Coast()
+        {
+            Vector2 velocity = body.linearVelocity;
+            float speed = velocity.magnitude;
+            if (speed <= momentumEndSpeed)
+            {
+                EndCoast();
+                return;
+            }
+
+            speed = Mathf.Max(momentumEndSpeed, speed - momentumDeceleration * Time.fixedDeltaTime);
+            body.linearVelocity = velocity.normalized * speed;
+        }
+
+        private void EndCoast()
+        {
+            coasting = false;
+            body.gravityScale = baseGravityScale;
         }
 
         private void CancelHook(bool preserveVelocity)
         {
             aiming = false;
             pulling = false;
+            hanging = false;
+            coasting = false;
             currentTarget = null;
             aimLine.enabled = false;
             body.gravityScale = baseGravityScale;
@@ -356,18 +464,14 @@ namespace HookPrototype
                 CancelHook(true);
             }
 
-            Vector2 dashDirection = ReadDashDirection();
-            if (dashDirection.sqrMagnitude < 0.01f)
-            {
-                dashDirection = aimDirection.sqrMagnitude > 0.01f
-                    ? aimDirection
-                    : new Vector2(Mathf.Approximately(moveInput, 0f) ? 1f : Mathf.Sign(moveInput), 0f);
-            }
+            // Horizontal only; the current vertical velocity is kept for the whole dash.
+            float direction = Mathf.Abs(moveInput) > 0.1f ? Mathf.Sign(moveInput) : facing;
 
+            coasting = false;
             dashAvailable = false;
             dashTimer = dashDuration;
             body.gravityScale = 0f;
-            body.linearVelocity = dashDirection.normalized * dashSpeed;
+            body.linearVelocity = new Vector2(direction * dashSpeed, body.linearVelocity.y);
         }
 
         private bool IsGrounded()
@@ -380,13 +484,20 @@ namespace HookPrototype
             foreach (Collider2D overlap in overlaps)
             {
                 if (overlap != bodyCollider && !overlap.isTrigger &&
-                    overlap.GetComponent<PrototypePlatform>() != null)
+                    IsSolidSurface(overlap))
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private static bool IsSolidSurface(Collider2D collider)
+        {
+            return collider.GetComponent<PrototypePlatform>() != null ||
+                   collider is TilemapCollider2D ||
+                   collider is CompositeCollider2D;
         }
 
         public void CompletePrototype()
@@ -436,8 +547,8 @@ namespace HookPrototype
             GUI.Box(new Rect(12f, 12f, 410f, 112f), GUIContent.none);
             GUI.Label(new Rect(24f, 19f, 380f, 28f), "HOOK CLIMB — PROTÓTIPO", title);
             GUI.Label(new Rect(24f, 48f, 390f, 72f),
-                "A/D: mover   Espaço: pular   Shift: dash (8 direções)\n" +
-                "Segure botão direito/E: mirar em slow motion\n" +
+                "A/D: mover   Espaço: pular   Shift: dash (esquerda/direita)\n" +
+                "Segure botão esquerdo/E: mirar em slow motion\n" +
                 "Solte: lançar Hook   Pressione novamente: cancelar   R: reiniciar", text);
 
             string dashText = dashAvailable ? "DASH PRONTO" : "DASH GASTO";
@@ -475,27 +586,6 @@ namespace HookPrototype
 #endif
         }
 
-        private static Vector2 ReadDashDirection()
-        {
-#if ENABLE_INPUT_SYSTEM
-            Vector2 direction = Vector2.zero;
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) direction.x -= 1f;
-                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) direction.x += 1f;
-                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) direction.y -= 1f;
-                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) direction.y += 1f;
-            }
-            if (Gamepad.current != null && Gamepad.current.leftStick.ReadValue().sqrMagnitude > direction.sqrMagnitude)
-            {
-                direction = Gamepad.current.leftStick.ReadValue();
-            }
-            return direction.normalized;
-#else
-            return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
-#endif
-        }
-
         private static Vector2 ReadPointerWorld()
         {
             Camera camera = Camera.main;
@@ -518,10 +608,10 @@ namespace HookPrototype
         private static bool ReadHookHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return (Mouse.current != null && Mouse.current.rightButton.isPressed) ||
+            return (Mouse.current != null && Mouse.current.leftButton.isPressed) ||
                    (Keyboard.current != null && Keyboard.current.eKey.isPressed);
 #else
-            return Input.GetMouseButton(1) || Input.GetKey(KeyCode.E);
+            return Input.GetMouseButton(0) || Input.GetKey(KeyCode.E);
 #endif
         }
 
