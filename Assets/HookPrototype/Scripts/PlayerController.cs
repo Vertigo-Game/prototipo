@@ -523,6 +523,33 @@ namespace HookPrototype
             body.gravityScale = 0f;
         }
 
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            CheckSpikeHit(collision.collider);
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            CheckSpikeHit(other);
+        }
+
+        private void CheckSpikeHit(Collider2D other)
+        {
+            if (completed)
+            {
+                return;
+            }
+
+            for (Transform t = other.transform; t != null; t = t.parent)
+            {
+                if (t.name.StartsWith("spike_group"))
+                {
+                    RestartPrototype();
+                    return;
+                }
+            }
+        }
+
         private void RestartPrototype()
         {
             SetTimeScale(1f);
