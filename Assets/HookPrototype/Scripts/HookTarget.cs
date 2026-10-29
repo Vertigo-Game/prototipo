@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace HookPrototype
@@ -9,9 +10,25 @@ namespace HookPrototype
 
         public bool IsEnemy => isEnemy;
 
+        /// <summary>Raised when a launched hook connects to this target.</summary>
+        public event Action Hooked;
+
+        /// <summary>Raised when a connected hook lets go without capturing this target.</summary>
+        public event Action Released;
+
         public void Configure(bool enemy)
         {
             isEnemy = enemy;
+        }
+
+        public void NotifyHooked()
+        {
+            Hooked?.Invoke();
+        }
+
+        public void NotifyReleased()
+        {
+            Released?.Invoke();
         }
     }
 }

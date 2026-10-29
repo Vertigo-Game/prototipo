@@ -327,6 +327,7 @@ namespace HookPrototype
             body.gravityScale = 0f;
             dashTimer = 0f;
             aimLine.enabled = true;
+            currentTarget.NotifyHooked();
         }
 
         private void PullTowardTarget()
@@ -457,6 +458,12 @@ namespace HookPrototype
 
         private void CancelHook(bool preserveVelocity)
         {
+            // Only a connected hook counts as a release; a target that was merely aimed at was never hooked.
+            if (pulling && currentTarget != null)
+            {
+                currentTarget.NotifyReleased();
+            }
+
             aiming = false;
             pulling = false;
             hanging = false;
