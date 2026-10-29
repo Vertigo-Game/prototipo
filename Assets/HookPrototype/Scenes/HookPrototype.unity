@@ -457,7 +457,7 @@ Camera:
   far clip plane: 100
   field of view: 60
   orthographic: 1
-  orthographic size: 5.4
+  orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -15268,8 +15268,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.Placa
   texto: "eu tava quase no topo, sabia?\na\xED esqueci que o shift s\xF3 funciona
     uma vez no ar.\n\nent\xE3o anota a\xED: espa\xE7o pula,\nshift d\xE1 o tranco,
-    mouse puxa.\n\ne o bot\xE3o direito \xE9 pra quando tu se arrepender.\neu uso
-    muito.\n\ndeixei isso aqui...\nvai que algu\xE9m precisa tamb\xE9m."
+    mouse puxa.\n\ne clicar de novo \xE9 pra quando tu se arrepender.\neu uso muito.\n\ndeixei
+    isso aqui...\nvai que algu\xE9m precisa tamb\xE9m."
   caixa: {fileID: 1194860842}
   aviso: {fileID: 850797346}
   deslocamentoAviso: {x: 0, y: 1.25}

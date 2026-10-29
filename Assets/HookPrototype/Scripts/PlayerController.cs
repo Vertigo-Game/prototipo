@@ -115,12 +115,12 @@ namespace HookPrototype
 
             if (pulling)
             {
-                if (ReadCancelPressed())
+                if (hookPressed)
                 {
                     ReleasePull();
                 }
             }
-            else if (aiming && ReadCancelPressed())
+            else if (aiming && hookPressed)
             {
                 CancelHook(true);
             }
@@ -638,15 +638,6 @@ namespace HookPrototype
                    (Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame);
 #else
             return Input.GetKeyDown(KeyCode.LeftShift);
-#endif
-        }
-
-        private static bool ReadCancelPressed()
-        {
-#if ENABLE_INPUT_SYSTEM
-            return Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame;
-#else
-            return Input.GetMouseButtonDown(1);
 #endif
         }
 
