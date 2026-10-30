@@ -37,6 +37,7 @@ namespace HookPrototype
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
         private static readonly int GroundedHash = Animator.StringToHash("Grounded");
         private static readonly int HookModeHash = Animator.StringToHash("HookMode");
+        private static readonly int InteractHash = Animator.StringToHash("Interact");
 
         private Rigidbody2D body;
         private Collider2D bodyCollider;
@@ -63,6 +64,16 @@ namespace HookPrototype
 
         // Set while a sign is being read: the game is paused and gameplay input is ignored.
         public bool InputLocked { get; set; }
+
+        // Interactions that should show Marcus's interact animation (e.g. lighting the campfire)
+        // call this when they start. Signs don't, so reading one doesn't trigger it.
+        public void BeginInteractAnimation()
+        {
+            if (animator != null)
+            {
+                animator.SetTrigger(InteractHash);
+            }
+        }
 
         private void Awake()
         {
