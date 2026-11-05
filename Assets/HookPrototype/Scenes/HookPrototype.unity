@@ -972,6 +972,75 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1001 &282777025
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1605831785}
+    m_Modifications:
+    - target: {fileID: 2586484420353327289, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: breakDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6832
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7093
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4.17
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.77
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6097187666205722489, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_Name
+      value: BreakableRockPlatform (1)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
 --- !u!1 &308484555
 GameObject:
   m_ObjectHideFlags: 0
@@ -1841,6 +1910,11 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!4 &535605858 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+  m_PrefabInstance: {fileID: 1801343474}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &556720431
 GameObject:
   m_ObjectHideFlags: 0
@@ -9274,6 +9348,11 @@ Transform:
   - {fileID: 1214936780}
   m_Father: {fileID: 1062570311}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1478540138 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+  m_PrefabInstance: {fileID: 282777025}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1529013069
 GameObject:
   m_ObjectHideFlags: 0
@@ -17755,6 +17834,9 @@ Transform:
   - {fileID: 1601376907}
   - {fileID: 1778215364}
   - {fileID: 1662978791}
+  - {fileID: 1998106588}
+  - {fileID: 1478540138}
+  - {fileID: 535605858}
   m_Father: {fileID: 228631509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156049354 &1605831786
@@ -18655,6 +18737,75 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!1001 &1801343474
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1605831785}
+    m_Modifications:
+    - target: {fileID: 2586484420353327289, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: breakDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6832
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7093
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 5.91
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.54
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6097187666205722489, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_Name
+      value: BreakableRockPlatform (2)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
 --- !u!1 &1806098617
 GameObject:
   m_ObjectHideFlags: 0
@@ -19141,6 +19292,80 @@ RectTransform:
   m_AnchoredPosition: {x: -34, y: 10}
   m_SizeDelta: {x: 50, y: 26}
   m_Pivot: {x: 1, y: 0}
+--- !u!4 &1998106588 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+  m_PrefabInstance: {fileID: 2080453555}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2080453555
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1605831785}
+    m_Modifications:
+    - target: {fileID: 2586484420353327289, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: breakDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6832
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7093
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2904110233148901736, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6097187666205722489, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
+      propertyPath: m_Name
+      value: BreakableRockPlatform
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f18317eb2cb5f0a43a0c3d181500f7d4, type: 3}
 --- !u!1 &2098672195
 GameObject:
   m_ObjectHideFlags: 0
