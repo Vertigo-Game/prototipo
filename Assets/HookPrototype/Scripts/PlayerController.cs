@@ -568,7 +568,9 @@ namespace HookPrototype
             }
         }
 
-        private void RestartPrototype()
+        // Reinicia o loop: recarrega a cena (fogueiras voltam apagadas, Marcus volta pra base).
+        // Usado pela queda, espinhos, Barra de Frio e pela fogueira final.
+        public void RestartPrototype()
         {
             SetTimeScale(1f);
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

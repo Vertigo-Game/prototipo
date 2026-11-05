@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HookPrototype;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -8,10 +9,20 @@ namespace Vertigo.Gameplay
 {
     // Fogueira acende com E quando o Marcos está no alcance (trigger) e parado no chão.
     // A sequência apagada -> acendendo -> acesa em loop fica toda no Animator.
+    // Acesa, aquece quem estiver dentro do raio de calor (ver BarraDeFrio).
+    // No modo final (fogueira do topo), depois de acesa um segundo E reinicia o loop.
     [RequireComponent(typeof(Collider2D), typeof(Animator))]
     public sealed class Fogueira : MonoBehaviour
     {
         private static readonly int AcenderHash = Animator.StringToHash("Acender");
+        private static readonly List<Fogueira> ativas = new List<Fogueira>();
+
+        [Header("Calor")]
+        [SerializeField] private float raioCalor = 3f;
+
+        [Header("Fogueira final (topo)")]
+        [Tooltip("Depois de acesa, um segundo E reinicia o jogo.")]
+        [SerializeField] private bool final;
 
         [Header("Aviso \"E\" (opcional)")]
         [SerializeField] private CanvasGroup aviso;
@@ -25,6 +36,27 @@ namespace Vertigo.Gameplay
         private Canvas avisoCanvas;
         private bool acesa;
 
+        public bool Acesa => acesa;
+
+        // True se alguma fogueira acesa alcança essa posição com o calor.
+        public static bool AlgumaAquece(Vector2 posicao)
+        {
+            for (int i = 0; i < ativas.Count; i++)
+            {
+                if (ativas[i].Aquece(posicao))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool Aquece(Vector2 posicao)
+        {
+            return acesa && ((Vector2)transform.position - posicao).sqrMagnitude <= raioCalor * raioCalor;
+        }
+
         private void Awake()
         {
             animator = GetComponent<Animator>();
@@ -36,6 +68,16 @@ namespace Vertigo.Gameplay
                 avisoPai = (RectTransform)avisoRect.parent;
                 avisoCanvas = aviso.GetComponentInParent<Canvas>();
             }
+        }
+
+        private void OnEnable()
+        {
+            ativas.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ativas.Remove(this);
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -57,19 +99,29 @@ namespace Vertigo.Gameplay
 
         private void Update()
         {
-            bool podeAcender = !acesa && jogador != null && jogador.CanInteract && !jogador.InputLocked;
+            bool jogadorPronto = jogador != null && jogador.CanInteract && !jogador.InputLocked;
+            bool podeInteragir = jogadorPronto && (!acesa || final);
 
-            if (podeAcender && ReadInteractPressed())
+            if (podeInteragir && ReadInteractPressed())
             {
-                acesa = true;
-                podeAcender = false;
-                animator.SetTrigger(AcenderHash);
-                jogador.BeginInteractAnimation();
+                if (!acesa)
+                {
+                    acesa = true;
+                    animator.SetTrigger(AcenderHash);
+                    jogador.BeginInteractAnimation();
+                }
+                else
+                {
+                    jogador.RestartPrototype();
+                    return;
+                }
+
+                podeInteragir = false;
             }
 
             if (aviso != null)
             {
-                float alvo = podeAcender ? 1f : 0f;
+                float alvo = podeInteragir ? 1f : 0f;
                 aviso.alpha = Mathf.MoveTowards(aviso.alpha, alvo, Time.unscaledDeltaTime / duracaoFadeAviso);
             }
         }
@@ -95,6 +147,12 @@ namespace Vertigo.Gameplay
             {
                 avisoRect.anchoredPosition = new Vector2(Mathf.Round(local.x), Mathf.Round(local.y));
             }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = new Color(1f, 0.55f, 0.1f, 0.8f);
+            Gizmos.DrawWireSphere(transform.position, raioCalor);
         }
 
         private static bool ReadInteractPressed()
