@@ -11,11 +11,18 @@ namespace Vertigo.UI
     [RequireComponent(typeof(BarraDeFrio))]
     public sealed class FrioHud : MonoBehaviour
     {
+        // Tamanho de 1 pixel da textura da geada, em unidades do Canvas 640x360.
+        private const float PixelGeada = 2f;
         private const int LarguraFrasco = 12;
         private const int AlturaFrasco = 56;
         // Linhas do frasco que recebem líquido (de baixo pra cima, em pixels da textura).
         private const int PrimeiraLinhaLiquido = 1;
         private const int UltimaLinhaLiquido = AlturaFrasco - 4;
+
+        [Header("Liga/desliga")]
+        [SerializeField] private bool mostrarFrasco = true;
+        [SerializeField, Tooltip("Geada nas bordas e tingimento azul da tela.")]
+        private bool mostrarGeada = true;
 
         [Header("Frasco")]
         [SerializeField] private Vector2 margem = new Vector2(12f, 12f);
@@ -31,6 +38,10 @@ namespace Vertigo.UI
         private float recuoInicialVinheta = 90f;
         [SerializeField] private Color corGeada = new Color(0.78f, 0.9f, 1f, 1f);
 
+        [Header("Tela congelando")]
+        [SerializeField, Range(0f, 1f)] private float opacidadeMaxTingimento = 0.3f;
+        [SerializeField] private Color corTingimento = new Color(0.35f, 0.6f, 1f, 1f);
+
         [Header("Canvas")]
         [SerializeField] private int ordemCanvas = -10;
 
@@ -40,6 +51,7 @@ namespace Vertigo.UI
         private Image liquido;
         private Image vinheta;
         private RectTransform vinhetaRect;
+        private Image tingimento;
         private float tempoDesdeZerar = float.PositiveInfinity;
         private readonly System.Collections.Generic.List<Object> criados = new System.Collections.Generic.List<Object>();
 
@@ -82,16 +94,24 @@ namespace Vertigo.UI
                 tempoDesdeZerar += Time.unscaledDeltaTime;
             }
 
-            float alvo = tempoDesdeZerar <= tempoVisivelAposZerar ? 1f : 0f;
+            float alvo = mostrarFrasco && tempoDesdeZerar <= tempoVisivelAposZerar ? 1f : 0f;
             grupoFrasco.alpha = Mathf.MoveTowards(grupoFrasco.alpha, alvo, Time.unscaledDeltaTime / duracaoFade);
 
             // Geada: entra das bordas e fica mais forte entre inicioVinheta e 100%.
-            float t = Mathf.InverseLerp(inicioVinheta, 1f, frio);
+            float t = mostrarGeada ? Mathf.InverseLerp(inicioVinheta, 1f, frio) : 0f;
             Color c = corGeada;
             c.a = opacidadeMaxVinheta * t;
             vinheta.color = c;
             vinheta.enabled = t > 0f;
-            float recuo = Mathf.Round(recuoInicialVinheta * (1f - t));
+
+            // Tingimento azul da tela toda: cresce junto com a geada, mas suave (curva ease-in).
+            Color ct = corTingimento;
+            ct.a = opacidadeMaxTingimento * t * t;
+            tingimento.color = ct;
+            tingimento.enabled = ct.a > 0f;
+
+            // Recuo em múltiplos do pixel da textura, pra geada andar sem tremer.
+            float recuo = Mathf.Round(recuoInicialVinheta * (1f - t) / PixelGeada) * PixelGeada;
             vinhetaRect.offsetMin = new Vector2(-recuo, -recuo);
             vinhetaRect.offsetMax = new Vector2(recuo, recuo);
         }
@@ -109,7 +129,11 @@ namespace Vertigo.UI
             scaler.referenceResolution = new Vector2(640f, 360f);
             scaler.matchWidthOrHeight = 1f;
 
-            // Geada primeiro, pra ficar atrás do frasco.
+            // Tingimento azul no fundo, depois a geada, e por cima o frasco.
+            tingimento = CriarImagem("Tingimento", raiz.transform, CriarSprite(CriarTexturaBranca(), FilterMode.Point));
+            Esticar(tingimento.rectTransform);
+            tingimento.enabled = false;
+
             vinheta = CriarImagem("Geada", raiz.transform, CriarSprite(CriarTexturaGeada(), FilterMode.Point));
             vinhetaRect = vinheta.rectTransform;
             vinhetaRect.anchorMin = Vector2.zero;
@@ -240,11 +264,22 @@ namespace Vertigo.UI
             liquidoTex.SetPixels(pl);
         }
 
-        // Moldura de geada 160x90 (1 px = 4 px do Canvas), borda irregular em degraus.
+        private static Texture2D CriarTexturaBranca()
+        {
+            Texture2D tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            tex.SetPixel(0, 0, Color.white);
+            return tex;
+        }
+
+        // Moldura de geada 320x180 (1 px = PixelGeada unidades do Canvas), borda irregular em degraus.
+        // Alpha em vários degraus; a franja externa é mais branca e o miolo mais azul.
         private static Texture2D CriarTexturaGeada()
         {
-            const int w = 160;
-            const int h = 90;
+            const int w = 320;
+            const int h = 180;
+            const int degraus = 6;
+            Color franja = Color.white;
+            Color miolo = new Color(0.72f, 0.88f, 1f, 1f);
             Color[] p = new Color[w * h];
             for (int y = 0; y < h; y++)
             {
@@ -254,10 +289,15 @@ namespace Vertigo.UI
                     float v = Mathf.Abs((y + 0.5f) / h * 2f - 1f);
                     // Distância "quadradona" pra geada abraçar as bordas.
                     float d = Mathf.Pow(Mathf.Pow(u, 6f) + Mathf.Pow(v, 6f), 1f / 6f);
-                    float ruido = Hash(x, y) * 0.12f + Hash(x / 3, y / 3) * 0.1f;
-                    float a = Mathf.InverseLerp(0.7f, 1f, d + ruido - 0.08f);
-                    a = Mathf.Floor(a * 4f) / 3f; // degraus de pixel art
-                    p[y * w + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(a));
+                    // Ruído em 3 escalas: grão fino, cristais médios e manchas grandes.
+                    float ruido = Hash(x, y) * 0.07f + Hash(x / 2, y / 2) * 0.07f + Hash(x / 6, y / 6) * 0.09f;
+                    float a = Mathf.InverseLerp(0.68f, 1f, d + ruido - 0.1f);
+                    a = Mathf.Clamp01(a);
+                    int nivel = Mathf.FloorToInt(a * degraus);
+                    float aq = nivel / (float)(degraus - 1);
+                    Color c = Color.Lerp(franja, miolo, aq);
+                    c.a = Mathf.Clamp01(aq);
+                    p[y * w + x] = c;
                 }
             }
 
