@@ -20,7 +20,7 @@ namespace Vertigo.UI
         [Header("Transição")]
         [SerializeField] private Image fade;
         [SerializeField] private float duracaoFade = 0.5f;
-        [SerializeField] private string cenaDoJogo = "HookPrototype";
+        [SerializeField] private string cenaDoJogo = "Fase1";
 
         [Header("Polimento")]
         [SerializeField] private float intervaloPiscarMarcador = 0.5f;
