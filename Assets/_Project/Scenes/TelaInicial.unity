@@ -832,7 +832,7 @@ MonoBehaviour:
   corSelecionada: {r: 0.9490196, g: 0.6, b: 0.2901961, a: 1}
   fade: {fileID: 374519376}
   duracaoFade: 0.5
-  cenaDoJogo: HookPrototype
+  cenaDoJogo: Fase1
   intervaloPiscarMarcador: 0.5
 --- !u!114 &431363344
 MonoBehaviour:
