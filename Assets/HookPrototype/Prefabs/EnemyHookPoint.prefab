@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1719568273}
   - component: {fileID: 1719568272}
   - component: {fileID: 1719568271}
+  - component: {fileID: 1719568274}
   m_Layer: 0
   m_Name: Enemy Hook Point
   m_TagString: Untagged
@@ -143,3 +144,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HookPrototype.HookTarget
   isEnemy: 1
+--- !u!114 &1719568274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719568269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42a58e331e149c1a8bc6fbd15edae49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.RenascimentoInimigo

@@ -58,6 +58,7 @@ namespace HookPrototype
         private float facing = 1f;
         private bool previousHookHeld;
         private bool completed;
+        private bool restarting;
 
         public bool DashAvailable => dashAvailable;
         public bool IsPulling => pulling;
@@ -413,7 +414,7 @@ namespace HookPrototype
                 body.linearVelocity = new Vector2(
                     incomingVelocity.x * 0.32f + steering * 3.75f,
                     enemyBounceSpeed + Mathf.Max(0f, incomingVelocity.y * 0.18f));
-                Destroy(reachedTarget.gameObject);
+                reachedTarget.Capture();
             }
             else
             {
@@ -558,6 +559,28 @@ namespace HookPrototype
         private void OnTriggerEnter2D(Collider2D other)
         {
             CheckSpikeHit(other);
+            CheckEnemyTouch(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            // Also on stay: letting go of the hook while already touching the enemy still kills.
+            CheckEnemyTouch(other);
+        }
+
+        private void CheckEnemyTouch(Collider2D other)
+        {
+            if (completed)
+            {
+                return;
+            }
+
+            // Reaching the enemy the hook is pulling toward is a capture, not a hit.
+            HookTarget target = other.GetComponent<HookTarget>();
+            if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
+            {
+                RestartPrototype();
+            }
         }
 
         private void CheckSpikeHit(Collider2D other)
@@ -581,6 +604,13 @@ namespace HookPrototype
         // Usado pela queda, espinhos, Barra de Frio e pela fogueira final.
         public void RestartPrototype()
         {
+            // Several hazards can fire in the same frame; the scene must only be reloaded once.
+            if (restarting)
+            {
+                return;
+            }
+
+            restarting = true;
             SetTimeScale(1f);
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
