@@ -267,17 +267,6 @@ namespace HookPrototype
                 body.linearVelocity = Vector2.zero;
                 return;
             }
-
-            // Sample here so input, dash and hook cannot overwrite an independent force callback.
-            float windSpeed = WindArea.Sample(bodyCollider);
-            if (climbing)
-            {
-                float y = Mathf.Clamp(body.position.y + climbInput * climbSpeed * Time.fixedDeltaTime, ropeMinY, ropeMaxY);
-                body.position = new Vector2(ropeX, y);
-                body.linearVelocity = Vector2.zero;
-                return;
-            }
-
             if (pulling)
             {
                 PullTowardTarget(windSpeed);
