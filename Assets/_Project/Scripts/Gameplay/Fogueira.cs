@@ -15,7 +15,12 @@ namespace Vertigo.Gameplay
     public sealed class Fogueira : MonoBehaviour
     {
         private static readonly int AcenderHash = Animator.StringToHash("Acender");
+        private static readonly int EstadoAcesaHash = Animator.StringToHash("campfire");
         private static readonly List<Fogueira> ativas = new List<Fogueira>();
+
+        [Header("Estado inicial")]
+        [Tooltip("Marcado: a fogueira já começa acesa (aquece e não precisa ser acendida). Desmarcado: começa apagada.")]
+        [SerializeField] private bool comecaAcesa;
 
         [Header("Calor")]
         [SerializeField] private float raioCalor = 3f;
@@ -60,6 +65,13 @@ namespace Vertigo.Gameplay
         private void Awake()
         {
             animator = GetComponent<Animator>();
+
+            if (comecaAcesa)
+            {
+                // Pula direto para o estado em loop, sem passar pela animação de acender.
+                acesa = true;
+                animator.Play(EstadoAcesaHash);
+            }
 
             if (aviso != null)
             {
