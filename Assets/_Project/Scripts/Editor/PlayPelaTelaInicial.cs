@@ -1,5 +1,7 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using Vertigo.Gameplay;
 
 namespace Vertigo.EditorTools
 {
@@ -37,8 +39,18 @@ namespace Vertigo.EditorTools
             return true;
         }
 
-        private static void Aplicar()
+        internal static void Aplicar()
         {
+            // Preferência do editor: continua valendo após R, Stop/Play e recarga de scripts.
+            if (ModoTeste.Ativo && ModoTeste.PularMenuInicial)
+            {
+                bool estaNoMenu = SceneManager.GetActiveScene().path == "Assets/_Project/Scenes/TelaInicial.unity";
+                EditorSceneManager.playModeStartScene = estaNoMenu
+                    ? AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/_Project/Scenes/Fase1.unity")
+                    : null;
+                return;
+            }
+
             bool ligado = EditorPrefs.GetBool(Chave, true);
             EditorBuildSettingsScene[] cenas = EditorBuildSettings.scenes;
             EditorSceneManager.playModeStartScene = ligado && cenas.Length > 0

@@ -47,7 +47,7 @@ namespace Vertigo.Gameplay
             }
 
             frio = Mathf.Min(1f, frio + dt / tempoParaCongelar);
-            if (frio >= 1f)
+            if (frio >= 1f && !ModoTeste.Ativo)
             {
                 jogador.RestartPrototype();
             }

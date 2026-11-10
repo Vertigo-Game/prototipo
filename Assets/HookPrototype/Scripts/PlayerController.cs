@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -53,7 +54,8 @@ namespace HookPrototype
         private Vector2 aimDirection = Vector2.up;
         private float moveInput;
         private float dashTimer;
-        private float dashDirection;
+        private readonly HashSet<WindArea> previousWindAreas = new HashSet<WindArea>();
+        private bool windPropelled;
         private float baseGravityScale;
         private bool dashAvailable = true;
         private bool aiming;
@@ -89,6 +91,8 @@ namespace HookPrototype
         // Sai com pulo, dash, E ou clique, como nos pontos fixos do gancho.
         public void BeginClimb(float x, float minY, float maxY)
         {
+            windPropelled = false;
+            previousWindAreas.Clear();
             climbing = true;
             climbStartFrame = Time.frameCount;
             climbInput = 0f;
@@ -267,29 +271,40 @@ namespace HookPrototype
                 body.linearVelocity = Vector2.zero;
                 return;
             }
+
+            if (climbing)
+            {
+                float y = Mathf.Clamp(body.position.y + climbInput * climbSpeed * Time.fixedDeltaTime, ropeMinY, ropeMaxY);
+                body.position = new Vector2(ropeX, y);
+                body.linearVelocity = Vector2.zero;
+                return;
+            }
+
+            WindArea.Influence wind = WindArea.Sample(bodyCollider, previousWindAreas);
+
             if (pulling)
             {
-                PullTowardTarget(windSpeed);
+                PullTowardTarget(wind.Active);
+                ApplyWind(wind);
                 return;
             }
 
             if (dashTimer > 0f)
             {
-                Vector2 dashVelocity = body.linearVelocity;
-                dashVelocity.x = dashDirection * dashSpeed + windSpeed;
-                body.linearVelocity = dashVelocity;
                 dashTimer -= Time.fixedDeltaTime;
                 if (dashTimer <= 0f)
                 {
                     body.gravityScale = baseGravityScale;
                 }
 
+                ApplyWind(wind);
                 return;
             }
 
             if (coasting)
             {
-                Coast(windSpeed);
+                Coast();
+                ApplyWind(wind);
                 return;
             }
 
@@ -301,8 +316,26 @@ namespace HookPrototype
 
             float acceleration = grounded ? groundAcceleration : airAcceleration;
             Vector2 velocity = body.linearVelocity;
-            velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
+            bool preserveMomentum = wind.Active || (windPropelled && !grounded);
+            bool steering = Mathf.Abs(moveInput) > 0.1f &&
+                (Mathf.Sign(moveInput) != Mathf.Sign(velocity.x) || Mathf.Abs(velocity.x) < runSpeed);
+            if (!preserveMomentum || steering)
+            {
+                velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed, acceleration * Time.fixedDeltaTime);
+            }
+            if (!wind.Active && (grounded || Mathf.Abs(velocity.x) <= runSpeed)) windPropelled = false;
             body.linearVelocity = velocity;
+            ApplyWind(wind);
+        }
+
+        private void ApplyWind(WindArea.Influence wind)
+        {
+            // Apply after every movement state. Dash never converts acceleration into an instant speed.
+            if (!wind.Active || hanging || climbing || completed) return;
+            Vector2 velocity = body.linearVelocity;
+            velocity.x = wind.Apply(velocity.x, Time.fixedDeltaTime);
+            body.linearVelocity = velocity;
+            windPropelled = true;
         }
 
         private void UpdateAnimation()
@@ -428,7 +461,7 @@ namespace HookPrototype
             currentTarget.NotifyHooked();
         }
 
-        private void PullTowardTarget(float windSpeed)
+        private void PullTowardTarget(bool inWind)
         {
             // A connected hook must always run at full game speed.
             if (!Mathf.Approximately(Time.timeScale, 1f))
@@ -466,8 +499,10 @@ namespace HookPrototype
                 return;
             }
 
-            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed + Vector2.right * windSpeed;
+            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed;
             Vector2 preservedVelocity = body.linearVelocity * 0.32f;
+            // Hook steering can oppose the wind, but must not erase its horizontal momentum every tick.
+            if (inWind) preservedVelocity.x = body.linearVelocity.x;
             body.linearVelocity = Vector2.MoveTowards(
                 preservedVelocity,
                 desiredVelocity,
@@ -498,6 +533,7 @@ namespace HookPrototype
             else
             {
                 hanging = true;
+                windPropelled = false;
                 pulling = true;
                 dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
@@ -535,10 +571,9 @@ namespace HookPrototype
             body.linearVelocity = direction * speed;
         }
 
-        private void Coast(float windSpeed)
+        private void Coast()
         {
-            Vector2 drift = Vector2.right * windSpeed;
-            Vector2 velocity = body.linearVelocity - drift;
+            Vector2 velocity = body.linearVelocity;
             float speed = velocity.magnitude;
             if (speed <= momentumEndSpeed)
             {
@@ -547,7 +582,7 @@ namespace HookPrototype
             }
 
             speed = Mathf.Max(momentumEndSpeed, speed - momentumDeceleration * Time.fixedDeltaTime);
-            body.linearVelocity = velocity.normalized * speed + drift;
+            body.linearVelocity = velocity.normalized * speed;
         }
 
         private void EndCoast()
@@ -592,7 +627,6 @@ namespace HookPrototype
             coasting = false;
             dashAvailable = false;
             dashTimer = dashDuration;
-            dashDirection = direction;
             body.gravityScale = 0f;
             body.linearVelocity = new Vector2(direction * dashSpeed, body.linearVelocity.y);
         }
@@ -675,6 +709,8 @@ namespace HookPrototype
 
         private void OnDisable()
         {
+            previousWindAreas.Clear();
+            windPropelled = false;
             SetTimeScale(1f);
         }
 
