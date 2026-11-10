@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace HookPrototype
 {
+    // Roda antes dos outros LateUpdate: os avisos "E" leem a posição da câmera e precisam do valor deste frame.
+    [DefaultExecutionOrder(-100)]
     public sealed class VerticalCameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;
