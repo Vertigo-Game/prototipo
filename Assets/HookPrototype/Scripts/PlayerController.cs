@@ -21,7 +21,12 @@ namespace HookPrototype
         [SerializeField] private float dashSpeed = 14f;
         [SerializeField] private float dashDuration = 0.14f;
 
+        [Header("Rope")]
+        [SerializeField] private float climbSpeed = 4f;
+
         [Header("Hook")]
+        [Tooltip("Desmarcado: o gancho só funciona depois de pegar o item (ItemGancho).")]
+        [SerializeField] private bool startsWithHook = true;
         [SerializeField] private float hookRange = 7.5f;
         [SerializeField] private float hookPullSpeed = 19f;
         [SerializeField] private float hookPullAcceleration = 110f;
@@ -58,11 +63,76 @@ namespace HookPrototype
         private float facing = 1f;
         private bool previousHookHeld;
         private bool completed;
+        private bool hookCollected;
+        private bool climbing;
+        private int climbStartFrame;
+        private float climbInput;
+        private float ropeX;
+        private float ropeMinY;
+        private float ropeMaxY;
+
+        public bool CanGrabRope => !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f;
+        public Bounds BodyBounds => bodyCollider.bounds;
+        public bool HasHook => startsWithHook || hookCollected;
+
+        // Chamado pelo item do gancho. Vale só até reiniciar a fase (a cena é recarregada).
+        public void CollectHook()
+        {
+            hookCollected = true;
+        }
         private bool restarting;
 
         public bool DashAvailable => dashAvailable;
         public bool IsPulling => pulling;
         public bool CanInteract => !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
+
+        // Corda: o Marcos fica preso na coluna x e sobe/desce entre minY e maxY (posição dos pés).
+        // Sai com pulo, dash, E ou clique, como nos pontos fixos do gancho.
+        public void BeginClimb(float x, float minY, float maxY)
+        {
+            climbing = true;
+            climbStartFrame = Time.frameCount;
+            climbInput = 0f;
+            ropeX = x;
+            ropeMinY = minY;
+            ropeMaxY = maxY;
+            dashAvailable = true;
+            body.gravityScale = 0f;
+            body.linearVelocity = Vector2.zero;
+        }
+
+        private void EndClimb()
+        {
+            climbing = false;
+            body.gravityScale = baseGravityScale;
+            body.linearVelocity = Vector2.zero;
+        }
+
+        private void UpdateClimb(bool hookPressed)
+        {
+            climbInput = ReadVertical();
+
+            // No frame em que agarrou, o mesmo E não pode soltar.
+            if (Time.frameCount == climbStartFrame)
+            {
+                return;
+            }
+
+            if (ReadJumpPressed())
+            {
+                EndClimb();
+                body.linearVelocity = new Vector2(0f, jumpSpeed);
+            }
+            else if (ReadDashPressed() && dashAvailable)
+            {
+                EndClimb();
+                StartDash();
+            }
+            else if (hookPressed || ReadInteractPressed())
+            {
+                EndClimb();
+            }
+        }
 
         // Set while a sign is being read: the game is paused and gameplay input is ignored.
         public bool InputLocked { get; set; }
@@ -126,6 +196,14 @@ namespace HookPrototype
             bool hookPressed = hookHeld && !previousHookHeld;
             bool hookReleased = !hookHeld && previousHookHeld;
 
+            if (climbing)
+            {
+                UpdateClimb(hookPressed);
+                previousHookHeld = hookHeld;
+                UpdateAnimation();
+                return;
+            }
+
             if (pulling)
             {
                 if (hookPressed)
@@ -139,7 +217,7 @@ namespace HookPrototype
             }
             else
             {
-                if (hookPressed)
+                if (hookPressed && HasHook)
                 {
                     BeginAiming();
                 }
@@ -155,14 +233,20 @@ namespace HookPrototype
                 }
             }
 
-            if (!pulling && !aiming && ReadJumpPressed() && IsGrounded())
+            if (hanging && ReadJumpPressed())
+            {
+                // Preso num ponto fixo: pular solta e já impulsiona para cima (a velocidade era zero).
+                CancelHook(true);
+                body.linearVelocity = new Vector2(0f, jumpSpeed);
+            }
+            else if (!pulling && !aiming && ReadJumpPressed() && IsGrounded())
             {
                 Vector2 velocity = body.linearVelocity;
                 velocity.y = jumpSpeed;
                 body.linearVelocity = velocity;
             }
 
-            if (!pulling && ReadDashPressed() && dashAvailable)
+            if ((!pulling || hanging) && ReadDashPressed() && dashAvailable)
             {
                 StartDash();
             }
@@ -185,6 +269,13 @@ namespace HookPrototype
                 return;
             }
 
+            if (climbing)
+            {
+                float y = Mathf.Clamp(body.position.y + climbInput * climbSpeed * Time.fixedDeltaTime, ropeMinY, ropeMaxY);
+                body.position = new Vector2(ropeX, y);
+                body.linearVelocity = Vector2.zero;
+                return;
+            }
             // Sample here so input, dash and hook cannot overwrite an independent force callback.
             float windSpeed = WindArea.Sample(bodyCollider);
 
@@ -420,6 +511,7 @@ namespace HookPrototype
             {
                 hanging = true;
                 pulling = true;
+                dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
                 body.gravityScale = 0f;
                 body.linearVelocity = Vector2.zero;
@@ -501,7 +593,7 @@ namespace HookPrototype
 
         private void StartDash()
         {
-            if (aiming)
+            if (aiming || hanging)
             {
                 CancelHook(true);
             }
@@ -546,6 +638,7 @@ namespace HookPrototype
         public void CompletePrototype()
         {
             completed = true;
+            climbing = false;
             CancelHook(true);
             body.linearVelocity = Vector2.zero;
             body.gravityScale = 0f;
@@ -677,6 +770,35 @@ namespace HookPrototype
             return Mathf.Clamp(value, -1f, 1f);
 #else
             return Input.GetAxisRaw("Horizontal");
+#endif
+        }
+
+        private static float ReadVertical()
+        {
+#if ENABLE_INPUT_SYSTEM
+            float value = 0f;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) value -= 1f;
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) value += 1f;
+            }
+            if (Gamepad.current != null && Mathf.Abs(Gamepad.current.leftStick.y.ReadValue()) > Mathf.Abs(value))
+            {
+                value = Gamepad.current.leftStick.y.ReadValue();
+            }
+            return Mathf.Clamp(value, -1f, 1f);
+#else
+            return Input.GetAxisRaw("Vertical");
+#endif
+        }
+
+        private static bool ReadInteractPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) ||
+                   (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+#else
+            return Input.GetKeyDown(KeyCode.E);
 #endif
         }
 

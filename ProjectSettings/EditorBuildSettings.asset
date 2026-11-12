@@ -14,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/HookPrototype/Scenes/HookPrototype.unity
     guid: 321af9181fe97824e8085586e5ecfbb5
+  - enabled: 1
+    path: Assets/_Project/Scenes/Fase1.unity
+    guid: 5b7d2e41c9a84f0e8d36a1f2c7e90b54
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
