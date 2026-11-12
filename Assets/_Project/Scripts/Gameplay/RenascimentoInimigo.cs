@@ -3,14 +3,16 @@ using UnityEngine;
 
 namespace Vertigo.Gameplay
 {
-    // Inimigo capturado pelo hook some e reaparece quando o jogador desce e a área do inimigo
-    // fica inteira acima da câmera. Funciona com o inimigo parado e com o InimigoMovel
-    // (que volta ao começo da rota). Se o jogador morrer, a cena recarrega e todos voltam de qualquer jeito.
+    // Inimigo capturado pelo hook morre (fica a carcaça, se tiver AnimacaoInimigo; senão some) e reaparece
+    // quando o jogador desce e a área do inimigo fica inteira acima da câmera. Funciona com o inimigo parado
+    // e com o InimigoMovel (que volta ao começo da rota). Se o jogador morrer, a cena recarrega e todos voltam.
     [RequireComponent(typeof(HookTarget))]
     public sealed class RenascimentoInimigo : MonoBehaviour
     {
         private HookTarget alvo;
         private InimigoMovel movel;
+        private Animator animador;
+        private AnimacaoInimigo animacao;
         private Renderer[] visuais;
         private Collider2D[] colisores;
         private bool[] visualLigado;
@@ -25,6 +27,8 @@ namespace Vertigo.Gameplay
         {
             alvo = GetComponent<HookTarget>();
             movel = GetComponent<InimigoMovel>();
+            animador = GetComponent<Animator>();
+            animacao = GetComponent<AnimacaoInimigo>();
             visuais = GetComponentsInChildren<Renderer>();
             colisores = GetComponentsInChildren<Collider2D>();
             visualLigado = new bool[visuais.Length];
@@ -74,10 +78,16 @@ namespace Vertigo.Gameplay
             }
 
             Capturado = true;
+
+            // Com animação de morte a carcaça continua à vista, só sem colisão; sem ela, o inimigo some.
+            bool manterCarcaca = animacao != null;
             for (int i = 0; i < visuais.Length; i++)
             {
                 visualLigado[i] = visuais[i].enabled;
-                visuais[i].enabled = false;
+                if (!manterCarcaca)
+                {
+                    visuais[i].enabled = false;
+                }
             }
 
             for (int i = 0; i < colisores.Length; i++)
@@ -91,6 +101,11 @@ namespace Vertigo.Gameplay
             {
                 movel.enabled = false;
             }
+
+            if (manterCarcaca)
+            {
+                animacao.Morrer();
+            }
         }
 
         private void Reaparecer()
@@ -100,6 +115,12 @@ namespace Vertigo.Gameplay
             {
                 movel.enabled = true;
                 movel.Reiniciar();
+            }
+
+            // Sai da carcaça (ou dos espinhos recolhidos) e volta do zero, no idle.
+            if (animador != null)
+            {
+                animador.Rebind();
             }
 
             for (int i = 0; i < visuais.Length; i++)
