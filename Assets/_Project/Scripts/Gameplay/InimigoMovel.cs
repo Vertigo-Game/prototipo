@@ -64,10 +64,32 @@ namespace Vertigo.Gameplay
             }
 
             origem = transform.position;
+            Reiniciar();
+        }
+
+        // Volta para o início configurado da rota, andando. Também usado quando o inimigo reaparece.
+        public void Reiniciar()
+        {
             rota = new RotaPatrulha(PontosNoMundo(origem), emLoop, progressoInicial, comecaVoltando);
             transform.position = new Vector3(rota.Posicao.x, rota.Posicao.y, transform.position.z);
             corpo.position = rota.Posicao;
+            tempoParado = 0f;
             Estado = EstadoInimigo.Movendo;
+        }
+
+        // Retângulo que contém todos os pontos da rota, no mundo.
+        public Bounds AreaDaRota
+        {
+            get
+            {
+                Bounds area = new Bounds(origem + pontos[0], Vector3.zero);
+                foreach (Vector2 ponto in pontos)
+                {
+                    area.Encapsulate(origem + ponto);
+                }
+
+                return area;
+            }
         }
 
         private void OnEnable()
