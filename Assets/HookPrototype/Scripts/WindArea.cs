@@ -16,21 +16,21 @@ namespace HookPrototype
 
         [Header("Empurrão")]
         [Tooltip("Aceleração horizontal em unidades/s², independente da aceleração do jogador. Zero desliga o vento.")]
-        [SerializeField, Min(0f)] private float strength = 60f;
+        [SerializeField, Min(0f)] private float strength = 30f;
         [Tooltip("Velocidade mínima na direção do vento ao entrar na área, inclusive por baixo. Zero remove o lançamento inicial.")]
-        [SerializeField, Min(0f)] private float launchSpeed = 14f;
+        [SerializeField, Min(0f)] private float launchSpeed = 10f;
         [Tooltip("Velocidade horizontal máxima produzida pelo vento. Não freia um jogador que já esteja mais rápido na mesma direção.")]
         [SerializeField, Min(0.1f)] private float maxSpeed = 30f;
 
         [Header("Linhas de vento")]
         [SerializeField] private Material lineMaterial;
-        [SerializeField, Range(1, 80)] private int lineCount = 24;
+        [SerializeField, Range(1, 80)] private int lineCount = 4;
         [SerializeField] private Color color = new Color(0.8f, 0.95f, 1f, 0.55f);
-        [SerializeField, Min(0.01f)] private float lineWidth = 0.035f;
-        [SerializeField, Min(0.05f)] private float lineLength = 1.25f;
+        [SerializeField, Min(0.01f)] private float lineWidth = 0.01f;
+        [SerializeField, Min(0.05f)] private float lineLength = 1.7f;
         [Tooltip("Use zero para linhas retas.")]
         [SerializeField, Min(0f)] private float waveAmplitude = 0.08f;
-        [SerializeField, Min(0.1f)] private float visualSpeed = 5f;
+        [SerializeField, Min(0.1f)] private float visualSpeed = 9f;
         [SerializeField] private int sortingOrder = 8;
         [Tooltip("Resolução da grade visual. Valores menores produzem pixels maiores.")]
         [SerializeField, Range(1, 64)] private int pixelsPerUnit = 16;
