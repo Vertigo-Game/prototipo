@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
@@ -28,6 +29,14 @@ namespace HookPrototype
         [Tooltip("Multiplicador da gravidade enquanto cai (sobe leve, desce firme).")]
         [SerializeField] private float fallGravityMultiplier = 1.6f;
         [SerializeField] private float maxFallSpeed = 20f;
+
+        [Header("Collision Assists")]
+        [Tooltip("Degrau mais alto (em tiles) que o Marcus sobe e desce andando, sem pular. 0 desliga.")]
+        [SerializeField] private float stepHeight = 1.05f;
+        [Tooltip("Duração da subida automática de um degrau.")]
+        [SerializeField] private float stepUpDuration = 0.08f;
+        [Tooltip("Correção de quina: quanto (em tiles) o pé ou a cabeça pode raspar numa quina e ainda passar. 0 desliga.")]
+        [SerializeField] private float cornerCorrection = 0.2f;
 
         [Header("Dash")]
         [SerializeField] private float dashSpeed = 17f;
@@ -96,6 +105,15 @@ namespace HookPrototype
         private float timeSinceGrounded = Never;
         private float timeSinceJumpPressed = Never;
         private bool jumpCutArmed;
+        private readonly List<RaycastHit2D> castHits = new List<RaycastHit2D>();
+        private readonly List<Collider2D> overlapHits = new List<Collider2D>();
+        private ContactFilter2D solidFilter;
+        private float stepRemaining;
+        private float stepSpeed;
+        private bool settleNextStep;
+        private bool wasGroundedLastStep;
+        private float ungroundedTime;
+        private const float SnapDownWindow = 0.15f;
 
         // Velocidade inicial que faz o pulo subir exatamente jumpHeight com a gravidade de subida.
         private float JumpSpeed => Mathf.Sqrt(2f * Mathf.Abs(Physics2D.gravity.y) * baseGravityScale * jumpHeight);
@@ -132,6 +150,7 @@ namespace HookPrototype
             dashAvailable = true;
             jumpCutArmed = false;
             coasting = false;
+            CancelStep();
             body.gravityScale = 0f;
             body.linearVelocity = Vector2.zero;
         }
@@ -191,6 +210,7 @@ namespace HookPrototype
             body = GetComponent<Rigidbody2D>();
             bodyCollider = GetComponent<Collider2D>();
             baseGravityScale = body.gravityScale;
+            solidFilter = new ContactFilter2D { useTriggers = false };
             animator = GetComponentInChildren<Animator>();
             visual = animator != null ? animator.GetComponent<SpriteRenderer>() : null;
 
@@ -314,6 +334,7 @@ namespace HookPrototype
 
             if (climbing)
             {
+                wasGroundedLastStep = false;
                 UpdateClimbPhysics();
                 return;
             }
@@ -322,12 +343,14 @@ namespace HookPrototype
 
             if (pulling)
             {
+                wasGroundedLastStep = false;
                 PullTowardTarget(windSpeed);
                 return;
             }
 
             if (dashTimer > 0f)
             {
+                wasGroundedLastStep = false;
                 Vector2 dashVelocity = body.linearVelocity;
                 dashVelocity.x = dashDirection * dashSpeed + windSpeed;
                 dashTimer -= Time.fixedDeltaTime;
@@ -347,7 +370,14 @@ namespace HookPrototype
 
             if (coasting)
             {
+                wasGroundedLastStep = false;
                 Coast(windSpeed);
+                return;
+            }
+
+            if (stepRemaining > 0f)
+            {
+                ContinueStepUp(moveInput * runSpeed + windSpeed);
                 return;
             }
 
@@ -355,15 +385,257 @@ namespace HookPrototype
             if (grounded)
             {
                 dashAvailable = true;
+                ungroundedTime = 0f;
+            }
+            else
+            {
+                ungroundedTime += Time.fixedDeltaTime;
             }
 
             float acceleration = grounded ? groundAcceleration : airAcceleration;
             Vector2 velocity = body.linearVelocity;
-            velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
+            if (settleNextStep)
+            {
+                // Depois de subir/descer um degrau, zera o vertical que sobrou do movimento.
+                settleNextStep = false;
+                if (grounded)
+                {
+                    velocity.y = 0f;
+                }
+            }
+
+            // Mirando no chão o Marcus fica parado; no ar continua dando para controlar.
+            float horizontalInput = aiming && grounded ? 0f : moveInput;
+            velocity.x = Mathf.MoveTowards(velocity.x, horizontalInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
+            float moveDirection = Mathf.Abs(horizontalInput) > 0.1f ? Mathf.Sign(horizontalInput) : 0f;
+
+            // Andando contra um degrau baixo: sobe sozinho em vez de travar.
+            if (grounded && moveDirection != 0f && velocity.y <= 0.01f && TryBeginStepUp(moveDirection))
+            {
+                ContinueStepUp(velocity.x);
+                return;
+            }
+
+            if (!grounded)
+            {
+                ApplyCornerCorrection(ref velocity, moveDirection);
+            }
+
             // Gravidade maior só na descida, com limite de velocidade de queda.
             body.gravityScale = velocity.y < 0f ? baseGravityScale * fallGravityMultiplier : baseGravityScale;
             velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
+
+            // Andando para fora de um degrau baixo: gruda no degrau de baixo em vez de cair.
+            // O sensor de chão é mais estreito que o corpo, então a quina do corpo ainda pode estar apoiada
+            // por alguns frames depois de "sair do chão": tenta durante uma janela curta, enquanto não pulou.
+            if (!grounded && wasGroundedLastStep && ungroundedTime <= SnapDownWindow &&
+                moveDirection != 0f && velocity.y <= 0.01f && TrySnapDown(out float drop))
+            {
+                velocity.y = -drop / Time.fixedDeltaTime;
+                settleNextStep = true;
+                grounded = true;
+            }
+
             body.linearVelocity = velocity;
+            // Continua elegível para grudar enquanto estiver dentro da janela e sem subir.
+            wasGroundedLastStep = grounded || (wasGroundedLastStep && ungroundedTime <= SnapDownWindow && velocity.y <= 0.01f);
+        }
+
+        // ---------- Degraus e quinas ----------
+
+        private Vector2 BodyEdge(Vector2 direction)
+        {
+            return bodyCollider.ClosestPoint((Vector2)bodyCollider.bounds.center + direction * 10f);
+        }
+
+        private bool AreaFree(Vector2 center, Vector2 size)
+        {
+            overlapHits.Clear();
+            Physics2D.OverlapBox(center, size, 0f, solidFilter, overlapHits);
+            foreach (Collider2D hit in overlapHits)
+            {
+                if (hit != bodyCollider)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool HitsFace(Vector2 direction, float distance, float minDot)
+        {
+            castHits.Clear();
+            bodyCollider.Cast(direction, solidFilter, castHits, distance);
+            foreach (RaycastHit2D hit in castHits)
+            {
+                if (Vector2.Dot(hit.normal, -direction) > minDot)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Topo do chão sólido logo abaixo de (x, fromY), ou NaN se não houver ou se o ponto já estiver dentro dele.
+        private float SurfaceTopBelow(float x, float fromY, float distance)
+        {
+            castHits.Clear();
+            Physics2D.Raycast(new Vector2(x, fromY), Vector2.down, solidFilter, castHits, distance);
+            foreach (RaycastHit2D hit in castHits)
+            {
+                if (hit.collider == bodyCollider)
+                {
+                    continue;
+                }
+
+                return hit.distance <= 0.0001f ? float.NaN : hit.point.y;
+            }
+
+            return float.NaN;
+        }
+
+        private bool TryBeginStepUp(float direction)
+        {
+            if (stepHeight <= 0f || !HitsFace(new Vector2(direction, 0f), 0.08f, 0.7f))
+            {
+                return false;
+            }
+
+            Vector2 center = bodyCollider.bounds.center;
+            float feet = BodyEdge(Vector2.down).y;
+            float head = BodyEdge(Vector2.up).y;
+            float halfWidth = Mathf.Abs(BodyEdge(new Vector2(direction, 0f)).x - center.x);
+
+            float top = SurfaceTopBelow(center.x + direction * (halfWidth + 0.06f), feet + stepHeight + 0.02f, stepHeight + 0.04f);
+            float rise = top - feet;
+            if (float.IsNaN(top) || rise <= 0.01f || rise > stepHeight)
+            {
+                return false;
+            }
+
+            // Precisa de espaço para subir no lugar e para ficar em cima do degrau.
+            Vector2 size = new Vector2(halfWidth * 2f - 0.02f, head - feet - 0.02f);
+            if (!AreaFree(new Vector2(center.x, center.y + rise + 0.02f), size) ||
+                !AreaFree(new Vector2(center.x + direction * 0.1f, center.y + rise + 0.02f), size))
+            {
+                return false;
+            }
+
+            stepRemaining = rise + 0.02f;
+            stepSpeed = stepRemaining / Mathf.Max(0.01f, stepUpDuration);
+            body.gravityScale = 0f;
+            return true;
+        }
+
+        private void ContinueStepUp(float horizontalVelocity)
+        {
+            float dt = Time.fixedDeltaTime;
+            float rise = Mathf.Min(stepRemaining, stepSpeed * dt);
+            stepRemaining -= rise;
+            body.linearVelocity = new Vector2(horizontalVelocity, rise / dt);
+            wasGroundedLastStep = true;
+
+            if (stepRemaining <= 0.0001f)
+            {
+                CancelStep();
+                settleNextStep = true;
+            }
+        }
+
+        private void CancelStep()
+        {
+            if (stepRemaining > 0f)
+            {
+                body.gravityScale = baseGravityScale;
+            }
+
+            stepRemaining = 0f;
+        }
+
+        private bool TrySnapDown(out float drop)
+        {
+            drop = 0f;
+            if (stepHeight <= 0f)
+            {
+                return false;
+            }
+
+            castHits.Clear();
+            bodyCollider.Cast(Vector2.down, solidFilter, castHits, stepHeight + 0.02f);
+            float best = float.MaxValue;
+            foreach (RaycastHit2D hit in castHits)
+            {
+                if (hit.distance < 0.02f)
+                {
+                    // Ainda apoiado na quina do degrau de cima: tenta de novo no próximo frame.
+                    return false;
+                }
+
+                if (hit.normal.y > 0.7f)
+                {
+                    best = Mathf.Min(best, hit.distance);
+                }
+            }
+
+            drop = best - 0.005f;
+            return best < float.MaxValue && drop > 0.02f;
+        }
+
+        // No ar: se o pé raspa na quina de uma borda, sobe por cima; se a cabeça raspa na quina de um teto, desvia de lado.
+        private void ApplyCornerCorrection(ref Vector2 velocity, float moveDirection)
+        {
+            if (cornerCorrection <= 0f)
+            {
+                return;
+            }
+
+            float dt = Time.fixedDeltaTime;
+            Vector2 center = bodyCollider.bounds.center;
+            float feet = BodyEdge(Vector2.down).y;
+            float head = BodyEdge(Vector2.up).y;
+            float halfWidth = (BodyEdge(Vector2.right).x - BodyEdge(Vector2.left).x) * 0.5f;
+            Vector2 size = new Vector2(halfWidth * 2f - 0.02f, head - feet - 0.02f);
+
+            float direction = moveDirection != 0f ? moveDirection : Mathf.Abs(velocity.x) > 0.5f ? Mathf.Sign(velocity.x) : 0f;
+            if (direction != 0f && HitsFace(new Vector2(direction, 0f), Mathf.Max(0.05f, Mathf.Abs(velocity.x) * dt + 0.02f), 0.7f))
+            {
+                float top = SurfaceTopBelow(center.x + direction * (halfWidth + 0.06f), feet + cornerCorrection + 0.02f, cornerCorrection + 0.04f);
+                float lift = top - feet + 0.02f;
+                if (!float.IsNaN(top) && lift > 0f && lift <= cornerCorrection + 0.02f &&
+                    AreaFree(new Vector2(center.x + direction * 0.08f, center.y + lift), size))
+                {
+                    body.position += new Vector2(0f, lift);
+                    velocity.y = Mathf.Max(velocity.y, 0f);
+                    return;
+                }
+            }
+
+            if (velocity.y > 0f)
+            {
+                float up = velocity.y * dt + 0.02f;
+                if (!HitsFace(Vector2.up, up, 0.7f))
+                {
+                    return;
+                }
+
+                float first = direction != 0f ? direction : 1f;
+                for (float shift = 0.02f; shift <= cornerCorrection + 0.001f; shift += 0.02f)
+                {
+                    if (AreaFree(new Vector2(center.x + first * shift, center.y + up), size))
+                    {
+                        body.position += new Vector2(first * shift, 0f);
+                        return;
+                    }
+
+                    if (AreaFree(new Vector2(center.x - first * shift, center.y + up), size))
+                    {
+                        body.position += new Vector2(-first * shift, 0f);
+                        return;
+                    }
+                }
+            }
         }
 
         private void UpdateClimbPhysics()
@@ -429,6 +701,9 @@ namespace HookPrototype
 
         private void Jump()
         {
+            CancelStep();
+            settleNextStep = false;
+            wasGroundedLastStep = false;
             Vector2 velocity = body.linearVelocity;
             velocity.y = JumpSpeed;
             body.linearVelocity = velocity;
@@ -474,7 +749,7 @@ namespace HookPrototype
             }
 
             animator.SetFloat(SpeedHash, Mathf.Abs(body.linearVelocity.x));
-            animator.SetBool(GroundedHash, IsGrounded());
+            animator.SetBool(GroundedHash, IsGrounded() || stepRemaining > 0f);
             animator.SetBool(HookModeHash, aiming || pulling);
         }
 
@@ -579,6 +854,7 @@ namespace HookPrototype
 
             pulling = true;
             jumpCutArmed = false;
+            CancelStep();
             body.gravityScale = 0f;
             dashTimer = 0f;
             aimLine.enabled = true;
@@ -748,6 +1024,7 @@ namespace HookPrototype
 
             coasting = false;
             jumpCutArmed = false;
+            CancelStep();
             dashAvailable = false;
             dashTimer = dashDuration;
             dashDirection = direction;
