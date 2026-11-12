@@ -18,7 +18,7 @@ namespace HookPrototype
 
         [Header("Jump")]
         [Tooltip("Altura máxima do pulo segurando o espaço, em tiles. A velocidade é calculada a partir da gravidade.")]
-        [SerializeField] private float jumpHeight = 3f;
+        [SerializeField] private float jumpHeight = 2.4f;
         [Tooltip("Soltar o espaço durante a subida multiplica a velocidade vertical por este valor (pulo curto).")]
         [SerializeField, Range(0f, 1f)] private float jumpCutMultiplier = 0.5f;
         [Tooltip("Coyote time: segundos depois de sair da beirada em que ainda dá para pular.")]
@@ -30,11 +30,19 @@ namespace HookPrototype
         [SerializeField] private float maxFallSpeed = 20f;
 
         [Header("Dash")]
-        [SerializeField] private float dashSpeed = 14f;
-        [SerializeField] private float dashDuration = 0.14f;
+        [SerializeField] private float dashSpeed = 17f;
+        [SerializeField] private float dashDuration = 0.18f;
 
         [Header("Rope")]
-        [SerializeField] private float climbSpeed = 4f;
+        [SerializeField] private float climbSpeed = 5.5f;
+        [Tooltip("Quão rápido chega na velocidade de subida/descida (e para quando solta).")]
+        [SerializeField] private float climbAcceleration = 45f;
+        [Tooltip("Velocidade com que o Marcus desliza até o centro da corda ao agarrar.")]
+        [SerializeField] private float ropeSnapSpeed = 8f;
+        [Tooltip("Impulso para cima ao chegar no topo da corda segurando cima, em tiles.")]
+        [SerializeField] private float ropeTopHopHeight = 1.3f;
+        [Tooltip("Tempo depois de soltar a corda antes de poder agarrar de novo.")]
+        [SerializeField] private float ropeRegrabDelay = 0.25f;
 
         [Header("Hook")]
         [Tooltip("Desmarcado: o gancho só funciona depois de pegar o item (ItemGancho).")]
@@ -82,6 +90,8 @@ namespace HookPrototype
         private float ropeX;
         private float ropeMinY;
         private float ropeMaxY;
+        private float climbVelocity;
+        private float ropeReleaseTime = -100f;
         private const float Never = float.MaxValue;
         private float timeSinceGrounded = Never;
         private float timeSinceJumpPressed = Never;
@@ -90,7 +100,8 @@ namespace HookPrototype
         // Velocidade inicial que faz o pulo subir exatamente jumpHeight com a gravidade de subida.
         private float JumpSpeed => Mathf.Sqrt(2f * Mathf.Abs(Physics2D.gravity.y) * baseGravityScale * jumpHeight);
 
-        public bool CanGrabRope => !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f;
+        public bool CanGrabRope => !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f &&
+                                   Time.time - ropeReleaseTime >= ropeRegrabDelay;
         public Bounds BodyBounds => bodyCollider.bounds;
         public bool HasHook => startsWithHook || hookCollected;
 
@@ -105,18 +116,22 @@ namespace HookPrototype
         public bool IsPulling => pulling;
         public bool CanInteract => !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
 
-        // Corda: o Marcos fica preso na coluna x e sobe/desce entre minY e maxY (posição dos pés).
-        // Sai com pulo, dash, E ou clique, como nos pontos fixos do gancho.
+        // Corda: o Marcos fica preso na coluna x e sobe/desce entre minY e maxY.
+        // Agarra com E ou segurando cima. Sai com pulo (para o lado que estiver segurando), dash, E,
+        // clique, descendo além da ponta de baixo ou subindo além do topo (ganha um impulso).
         public void BeginClimb(float x, float minY, float maxY)
         {
             climbing = true;
             climbStartFrame = Time.frameCount;
             climbInput = 0f;
+            // Agarrar caindo amortece um pouco a queda em vez de parar seco.
+            climbVelocity = Mathf.Clamp(body.linearVelocity.y * 0.25f, -climbSpeed, climbSpeed);
             ropeX = x;
             ropeMinY = minY;
             ropeMaxY = maxY;
             dashAvailable = true;
             jumpCutArmed = false;
+            coasting = false;
             body.gravityScale = 0f;
             body.linearVelocity = Vector2.zero;
         }
@@ -124,6 +139,8 @@ namespace HookPrototype
         private void EndClimb()
         {
             climbing = false;
+            climbVelocity = 0f;
+            ropeReleaseTime = Time.time;
             body.gravityScale = baseGravityScale;
             body.linearVelocity = Vector2.zero;
         }
@@ -141,6 +158,8 @@ namespace HookPrototype
             if (ReadJumpPressed())
             {
                 EndClimb();
+                // Pula para o lado que estiver segurando; sem direção, sobe reto.
+                body.linearVelocity = new Vector2(moveInput * runSpeed, 0f);
                 Jump();
             }
             else if (ReadDashPressed() && dashAvailable)
@@ -295,9 +314,7 @@ namespace HookPrototype
 
             if (climbing)
             {
-                float y = Mathf.Clamp(body.position.y + climbInput * climbSpeed * Time.fixedDeltaTime, ropeMinY, ropeMaxY);
-                body.position = new Vector2(ropeX, y);
-                body.linearVelocity = Vector2.zero;
+                UpdateClimbPhysics();
                 return;
             }
             // Sample here so input, dash and hook cannot overwrite an independent force callback.
@@ -317,9 +334,11 @@ namespace HookPrototype
                 if (dashTimer <= 0f)
                 {
                     body.gravityScale = baseGravityScale;
-                    // Sem deslize depois do dash: volta direto para a velocidade de corrida
-                    // (ou para parado sem input), senão o dash rende muito mais no ar.
-                    dashVelocity.x = moveInput * runSpeed + windSpeed;
+                    // Sai do dash na velocidade de corrida (na direção do input, ou na do dash
+                    // sem input) e o controle normal desacelera dali: sem o deslize longo de antes,
+                    // mas também sem parar seco.
+                    float exitDirection = Mathf.Abs(moveInput) > 0.1f ? moveInput : dashDirection;
+                    dashVelocity.x = exitDirection * runSpeed + windSpeed;
                 }
 
                 body.linearVelocity = dashVelocity;
@@ -345,6 +364,45 @@ namespace HookPrototype
             body.gravityScale = velocity.y < 0f ? baseGravityScale * fallGravityMultiplier : baseGravityScale;
             velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
             body.linearVelocity = velocity;
+        }
+
+        private void UpdateClimbPhysics()
+        {
+            float dt = Time.fixedDeltaTime;
+            Vector2 position = body.position;
+
+            climbVelocity = Mathf.MoveTowards(climbVelocity, climbInput * climbSpeed, climbAcceleration * dt);
+            float targetY = position.y + climbVelocity * dt;
+
+            if (targetY >= ropeMaxY && climbInput > 0.5f)
+            {
+                // Passou do topo segurando cima: sai da corda com um impulso para subir na borda.
+                EndClimb();
+                float hopSpeed = Mathf.Sqrt(2f * Mathf.Abs(Physics2D.gravity.y) * baseGravityScale * ropeTopHopHeight);
+                body.linearVelocity = new Vector2(moveInput * runSpeed, hopSpeed);
+                return;
+            }
+
+            if (climbInput < -0.5f &&
+                ((targetY <= ropeMinY && position.y <= ropeMinY + 0.01f) || IsGrounded()))
+            {
+                // Na ponta de baixo (ou já pisando no chão) segurando baixo: solta.
+                EndClimb();
+                return;
+            }
+
+            targetY = Mathf.Clamp(targetY, ropeMinY, ropeMaxY);
+            if (Mathf.Approximately(targetY, ropeMinY) || Mathf.Approximately(targetY, ropeMaxY))
+            {
+                climbVelocity = 0f;
+            }
+
+            // Move por velocidade (não teleporte) para a interpolação continuar suave;
+            // a correção até a coluna da corda e para dentro do trecho é limitada pelo ropeSnapSpeed.
+            float maxStep = Mathf.Max(ropeSnapSpeed, climbSpeed) * dt;
+            float x = Mathf.MoveTowards(position.x, ropeX, ropeSnapSpeed * dt);
+            float y = Mathf.MoveTowards(position.y, targetY, maxStep);
+            body.linearVelocity = (new Vector2(x, y) - position) / dt;
         }
 
         private void UpdateJumpTimers(bool jumpPressed)
