@@ -53,6 +53,7 @@ namespace HookPrototype
         private Vector2 aimDirection = Vector2.up;
         private float moveInput;
         private float dashTimer;
+        private float dashDirection;
         private float baseGravityScale;
         private bool dashAvailable = true;
         private bool aiming;
@@ -79,6 +80,7 @@ namespace HookPrototype
         {
             hookCollected = true;
         }
+        private bool restarting;
 
         public bool DashAvailable => dashAvailable;
         public bool IsPulling => pulling;
@@ -274,15 +276,20 @@ namespace HookPrototype
                 body.linearVelocity = Vector2.zero;
                 return;
             }
+            // Sample here so input, dash and hook cannot overwrite an independent force callback.
+            float windSpeed = WindArea.Sample(bodyCollider);
 
             if (pulling)
             {
-                PullTowardTarget();
+                PullTowardTarget(windSpeed);
                 return;
             }
 
             if (dashTimer > 0f)
             {
+                Vector2 dashVelocity = body.linearVelocity;
+                dashVelocity.x = dashDirection * dashSpeed + windSpeed;
+                body.linearVelocity = dashVelocity;
                 dashTimer -= Time.fixedDeltaTime;
                 if (dashTimer <= 0f)
                 {
@@ -294,7 +301,7 @@ namespace HookPrototype
 
             if (coasting)
             {
-                Coast();
+                Coast(windSpeed);
                 return;
             }
 
@@ -306,7 +313,7 @@ namespace HookPrototype
 
             float acceleration = grounded ? groundAcceleration : airAcceleration;
             Vector2 velocity = body.linearVelocity;
-            velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed, acceleration * Time.fixedDeltaTime);
+            velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
             body.linearVelocity = velocity;
         }
 
@@ -433,7 +440,7 @@ namespace HookPrototype
             currentTarget.NotifyHooked();
         }
 
-        private void PullTowardTarget()
+        private void PullTowardTarget(float windSpeed)
         {
             // A connected hook must always run at full game speed.
             if (!Mathf.Approximately(Time.timeScale, 1f))
@@ -471,7 +478,7 @@ namespace HookPrototype
                 return;
             }
 
-            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed;
+            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed + Vector2.right * windSpeed;
             Vector2 preservedVelocity = body.linearVelocity * 0.32f;
             body.linearVelocity = Vector2.MoveTowards(
                 preservedVelocity,
@@ -498,7 +505,7 @@ namespace HookPrototype
                 body.linearVelocity = new Vector2(
                     incomingVelocity.x * 0.32f + steering * 3.75f,
                     enemyBounceSpeed + Mathf.Max(0f, incomingVelocity.y * 0.18f));
-                Destroy(reachedTarget.gameObject);
+                reachedTarget.Capture();
             }
             else
             {
@@ -540,9 +547,10 @@ namespace HookPrototype
             body.linearVelocity = direction * speed;
         }
 
-        private void Coast()
+        private void Coast(float windSpeed)
         {
-            Vector2 velocity = body.linearVelocity;
+            Vector2 drift = Vector2.right * windSpeed;
+            Vector2 velocity = body.linearVelocity - drift;
             float speed = velocity.magnitude;
             if (speed <= momentumEndSpeed)
             {
@@ -551,7 +559,7 @@ namespace HookPrototype
             }
 
             speed = Mathf.Max(momentumEndSpeed, speed - momentumDeceleration * Time.fixedDeltaTime);
-            body.linearVelocity = velocity.normalized * speed;
+            body.linearVelocity = velocity.normalized * speed + drift;
         }
 
         private void EndCoast()
@@ -596,6 +604,7 @@ namespace HookPrototype
             coasting = false;
             dashAvailable = false;
             dashTimer = dashDuration;
+            dashDirection = direction;
             body.gravityScale = 0f;
             body.linearVelocity = new Vector2(direction * dashSpeed, body.linearVelocity.y);
         }
@@ -643,6 +652,28 @@ namespace HookPrototype
         private void OnTriggerEnter2D(Collider2D other)
         {
             CheckSpikeHit(other);
+            CheckEnemyTouch(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            // Also on stay: letting go of the hook while already touching the enemy still kills.
+            CheckEnemyTouch(other);
+        }
+
+        private void CheckEnemyTouch(Collider2D other)
+        {
+            if (completed)
+            {
+                return;
+            }
+
+            // Reaching the enemy the hook is pulling toward is a capture, not a hit.
+            HookTarget target = other.GetComponent<HookTarget>();
+            if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
+            {
+                RestartPrototype();
+            }
         }
 
         private void CheckSpikeHit(Collider2D other)
@@ -666,6 +697,13 @@ namespace HookPrototype
         // Usado pela queda, espinhos, Barra de Frio e pela fogueira final.
         public void RestartPrototype()
         {
+            // Several hazards can fire in the same frame; the scene must only be reloaded once.
+            if (restarting)
+            {
+                return;
+            }
+
+            restarting = true;
             SetTimeScale(1f);
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
