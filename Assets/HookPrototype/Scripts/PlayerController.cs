@@ -14,8 +14,20 @@ namespace HookPrototype
         [SerializeField] private float runSpeed = 6.5f;
         [SerializeField] private float groundAcceleration = 55f;
         [SerializeField] private float airAcceleration = 16f;
-        [SerializeField] private float jumpSpeed = 10.5f;
         [SerializeField] private float fallLimit = -5f;
+
+        [Header("Jump")]
+        [Tooltip("Altura máxima do pulo segurando o espaço, em tiles. A velocidade é calculada a partir da gravidade.")]
+        [SerializeField] private float jumpHeight = 3f;
+        [Tooltip("Soltar o espaço durante a subida multiplica a velocidade vertical por este valor (pulo curto).")]
+        [SerializeField, Range(0f, 1f)] private float jumpCutMultiplier = 0.5f;
+        [Tooltip("Coyote time: segundos depois de sair da beirada em que ainda dá para pular.")]
+        [SerializeField] private float coyoteTime = 0.1f;
+        [Tooltip("Jump buffer: apertar o pulo até estes segundos antes de tocar o chão ainda pula. 0 desliga.")]
+        [SerializeField] private float jumpBufferTime = 0.1f;
+        [Tooltip("Multiplicador da gravidade enquanto cai (sobe leve, desce firme).")]
+        [SerializeField] private float fallGravityMultiplier = 1.6f;
+        [SerializeField] private float maxFallSpeed = 20f;
 
         [Header("Dash")]
         [SerializeField] private float dashSpeed = 14f;
@@ -70,6 +82,13 @@ namespace HookPrototype
         private float ropeX;
         private float ropeMinY;
         private float ropeMaxY;
+        private const float Never = float.MaxValue;
+        private float timeSinceGrounded = Never;
+        private float timeSinceJumpPressed = Never;
+        private bool jumpCutArmed;
+
+        // Velocidade inicial que faz o pulo subir exatamente jumpHeight com a gravidade de subida.
+        private float JumpSpeed => Mathf.Sqrt(2f * Mathf.Abs(Physics2D.gravity.y) * baseGravityScale * jumpHeight);
 
         public bool CanGrabRope => !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f;
         public Bounds BodyBounds => bodyCollider.bounds;
@@ -97,6 +116,7 @@ namespace HookPrototype
             ropeMinY = minY;
             ropeMaxY = maxY;
             dashAvailable = true;
+            jumpCutArmed = false;
             body.gravityScale = 0f;
             body.linearVelocity = Vector2.zero;
         }
@@ -121,7 +141,7 @@ namespace HookPrototype
             if (ReadJumpPressed())
             {
                 EndClimb();
-                body.linearVelocity = new Vector2(0f, jumpSpeed);
+                Jump();
             }
             else if (ReadDashPressed() && dashAvailable)
             {
@@ -233,18 +253,22 @@ namespace HookPrototype
                 }
             }
 
-            if (hanging && ReadJumpPressed())
+            bool jumpPressed = ReadJumpPressed();
+            UpdateJumpTimers(jumpPressed);
+
+            if (hanging && jumpPressed)
             {
                 // Preso num ponto fixo: pular solta e já impulsiona para cima (a velocidade era zero).
                 CancelHook(true);
-                body.linearVelocity = new Vector2(0f, jumpSpeed);
+                Jump();
             }
-            else if (!pulling && !aiming && ReadJumpPressed() && IsGrounded())
+            else if (!pulling && !aiming &&
+                     timeSinceJumpPressed <= jumpBufferTime && timeSinceGrounded <= coyoteTime)
             {
-                Vector2 velocity = body.linearVelocity;
-                velocity.y = jumpSpeed;
-                body.linearVelocity = velocity;
+                Jump();
             }
+
+            ApplyJumpCut();
 
             if ((!pulling || hanging) && ReadDashPressed() && dashAvailable)
             {
@@ -289,13 +313,16 @@ namespace HookPrototype
             {
                 Vector2 dashVelocity = body.linearVelocity;
                 dashVelocity.x = dashDirection * dashSpeed + windSpeed;
-                body.linearVelocity = dashVelocity;
                 dashTimer -= Time.fixedDeltaTime;
                 if (dashTimer <= 0f)
                 {
                     body.gravityScale = baseGravityScale;
+                    // Sem deslize depois do dash: volta direto para a velocidade de corrida
+                    // (ou para parado sem input), senão o dash rende muito mais no ar.
+                    dashVelocity.x = moveInput * runSpeed + windSpeed;
                 }
 
+                body.linearVelocity = dashVelocity;
                 return;
             }
 
@@ -314,7 +341,66 @@ namespace HookPrototype
             float acceleration = grounded ? groundAcceleration : airAcceleration;
             Vector2 velocity = body.linearVelocity;
             velocity.x = Mathf.MoveTowards(velocity.x, moveInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
+            // Gravidade maior só na descida, com limite de velocidade de queda.
+            body.gravityScale = velocity.y < 0f ? baseGravityScale * fallGravityMultiplier : baseGravityScale;
+            velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
             body.linearVelocity = velocity;
+        }
+
+        private void UpdateJumpTimers(bool jumpPressed)
+        {
+            // Só conta como chão parado ou descendo: logo depois do pulo o check ainda encosta no chão.
+            if (IsGrounded() && body.linearVelocity.y <= 0.01f)
+            {
+                timeSinceGrounded = 0f;
+            }
+            else if (timeSinceGrounded < Never)
+            {
+                timeSinceGrounded += Time.deltaTime;
+            }
+
+            if (jumpPressed)
+            {
+                timeSinceJumpPressed = 0f;
+            }
+            else if (timeSinceJumpPressed < Never)
+            {
+                timeSinceJumpPressed += Time.deltaTime;
+            }
+        }
+
+        private void Jump()
+        {
+            Vector2 velocity = body.linearVelocity;
+            velocity.y = JumpSpeed;
+            body.linearVelocity = velocity;
+            body.gravityScale = baseGravityScale;
+            jumpCutArmed = true;
+            // Consome o buffer e o coyote para o mesmo aperto não gerar um segundo pulo.
+            timeSinceGrounded = Never;
+            timeSinceJumpPressed = Never;
+        }
+
+        private void ApplyJumpCut()
+        {
+            if (!jumpCutArmed)
+            {
+                return;
+            }
+
+            Vector2 velocity = body.linearVelocity;
+            if (velocity.y <= 0f || pulling || coasting || dashTimer > 0f)
+            {
+                jumpCutArmed = false;
+                return;
+            }
+
+            if (!ReadJumpHeld())
+            {
+                velocity.y *= jumpCutMultiplier;
+                body.linearVelocity = velocity;
+                jumpCutArmed = false;
+            }
         }
 
         private void UpdateAnimation()
@@ -434,6 +520,7 @@ namespace HookPrototype
             }
 
             pulling = true;
+            jumpCutArmed = false;
             body.gravityScale = 0f;
             dashTimer = 0f;
             aimLine.enabled = true;
@@ -598,15 +685,16 @@ namespace HookPrototype
                 CancelHook(true);
             }
 
-            // Horizontal only; the current vertical velocity is kept for the whole dash.
+            // Linha reta horizontal: zera o vertical para o dash não render altura no meio do pulo.
             float direction = Mathf.Abs(moveInput) > 0.1f ? Mathf.Sign(moveInput) : facing;
 
             coasting = false;
+            jumpCutArmed = false;
             dashAvailable = false;
             dashTimer = dashDuration;
             dashDirection = direction;
             body.gravityScale = 0f;
-            body.linearVelocity = new Vector2(direction * dashSpeed, body.linearVelocity.y);
+            body.linearVelocity = new Vector2(direction * dashSpeed, 0f);
         }
 
         private bool IsGrounded()
@@ -836,6 +924,15 @@ namespace HookPrototype
             return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
 #else
             return Input.GetKeyDown(KeyCode.Space);
+#endif
+        }
+
+        private static bool ReadJumpHeld()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+#else
+            return Input.GetKey(KeyCode.Space);
 #endif
         }
 
