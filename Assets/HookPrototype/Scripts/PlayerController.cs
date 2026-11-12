@@ -2,12 +2,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using Vertigo.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
 namespace HookPrototype
 {
+    // O que matou o Marcos. Queda e Perigo (espinhos/inimigos) tocam marcus_death_1;
+    // Congelamento ainda não tem animação própria.
+    public enum CausaDaMorte
+    {
+        Queda,
+        Perigo,
+        Congelamento
+    }
+
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
     public sealed class PlayerController : MonoBehaviour
     {
@@ -40,10 +50,16 @@ namespace HookPrototype
         [SerializeField] private float momentumDeceleration = 14f;
         [SerializeField] private float momentumEndSpeed = 6f;
 
+        [Header("Death")]
+        [Tooltip("Tamanho da colisão do corpo deitado, em unidades do mundo. A base continua na altura dos pés.")]
+        [SerializeField] private Vector2 corpseColliderSize = new Vector2(1.3f, 0.6f);
+
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
         private static readonly int GroundedHash = Animator.StringToHash("Grounded");
         private static readonly int HookModeHash = Animator.StringToHash("HookMode");
         private static readonly int InteractHash = Animator.StringToHash("Interact");
+        private static readonly int DeadHash = Animator.StringToHash("Dead");
+        private static readonly int DeathStateHash = Animator.StringToHash("marcus_death_1");
 
         private Rigidbody2D body;
         private Collider2D bodyCollider;
@@ -72,8 +88,11 @@ namespace HookPrototype
         private float ropeX;
         private float ropeMinY;
         private float ropeMaxY;
+        private bool dead;
+        private bool corpseFrozen;
 
-        public bool CanGrabRope => !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f;
+        public bool IsDead => dead;
+        public bool CanGrabRope => !dead && !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f;
         public Bounds BodyBounds => bodyCollider.bounds;
         public bool HasHook => startsWithHook || hookCollected;
 
@@ -86,7 +105,7 @@ namespace HookPrototype
 
         public bool DashAvailable => dashAvailable;
         public bool IsPulling => pulling;
-        public bool CanInteract => !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
+        public bool CanInteract => !dead && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
 
         // Corda: o Marcos fica preso na coluna x e sobe/desce entre minY e maxY (posição dos pés).
         // Sai com pulo, dash, E ou clique, como nos pontos fixos do gancho.
@@ -178,6 +197,17 @@ namespace HookPrototype
                 return;
             }
 
+            if (dead)
+            {
+                // Corpo que caiu num buraco fica parado onde passou do limite, à vista da câmera.
+                if (!corpseFrozen && transform.position.y < fallLimit)
+                {
+                    FreezeCorpse();
+                }
+
+                return;
+            }
+
             if (completed)
             {
                 return;
@@ -257,7 +287,7 @@ namespace HookPrototype
 
             if (transform.position.y < fallLimit)
             {
-                RestartPrototype();
+                Die(CausaDaMorte.Queda);
                 return;
             }
 
@@ -267,6 +297,21 @@ namespace HookPrototype
 
         private void FixedUpdate()
         {
+            if (dead)
+            {
+                if (corpseFrozen)
+                {
+                    body.linearVelocity = Vector2.zero;
+                    return;
+                }
+
+                // Sem controle: o corpo só cai e para de deslizar no chão.
+                Vector2 corpseVelocity = body.linearVelocity;
+                corpseVelocity.x = Mathf.MoveTowards(corpseVelocity.x, 0f, groundAcceleration * Time.fixedDeltaTime);
+                body.linearVelocity = corpseVelocity;
+                return;
+            }
+
             if (completed)
             {
                 body.linearVelocity = Vector2.zero;
@@ -686,7 +731,7 @@ namespace HookPrototype
 
         private void CheckEnemyTouch(Collider2D other)
         {
-            if (completed)
+            if (completed || dead)
             {
                 return;
             }
@@ -695,13 +740,13 @@ namespace HookPrototype
             HookTarget target = other.GetComponent<HookTarget>();
             if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
             {
-                RestartPrototype();
+                Die(CausaDaMorte.Perigo);
             }
         }
 
         private void CheckSpikeHit(Collider2D other)
         {
-            if (completed)
+            if (completed || dead)
             {
                 return;
             }
@@ -710,14 +755,87 @@ namespace HookPrototype
             {
                 if (t.name.StartsWith("spike_group"))
                 {
-                    RestartPrototype();
+                    Die(CausaDaMorte.Perigo);
                     return;
                 }
             }
         }
 
+        // Morte: o Marcos para de responder, toca a animação (exceto congelamento, que ainda não tem)
+        // e a tela de Game Over aparece por cima do jogo, que continua rodando. R recarrega a cena.
+        public void Die(CausaDaMorte causa)
+        {
+            if (dead || completed || restarting)
+            {
+                return;
+            }
+
+            dead = true;
+            climbing = false;
+            dashTimer = 0f;
+            moveInput = 0f;
+            CancelHook(true);
+            body.gravityScale = baseGravityScale;
+            body.linearVelocity = new Vector2(0f, Mathf.Min(0f, body.linearVelocity.y));
+
+            if (causa == CausaDaMorte.Queda)
+            {
+                FreezeCorpse();
+            }
+
+            if (animator != null)
+            {
+                animator.SetBool(DeadHash, true);
+                animator.SetBool(HookModeHash, false);
+                if (causa == CausaDaMorte.Congelamento)
+                {
+                    // Provisório até existir a animação de congelamento: o Marcos trava na pose atual.
+                    animator.speed = 0f;
+                }
+                else
+                {
+                    animator.Play(DeathStateHash, 0, 0f);
+                }
+            }
+
+            if (causa != CausaDaMorte.Congelamento)
+            {
+                LieDownCollider();
+            }
+
+            TelaGameOver.Mostrar();
+        }
+
+        // A cápsula em pé deixaria o corpo deitado flutuando (e preso em beiradas): vira uma cápsula
+        // horizontal e baixa, com a mesma base, para o corpo assentar no chão sem dar pulo.
+        private void LieDownCollider()
+        {
+            if (!(bodyCollider is CapsuleCollider2D capsule))
+            {
+                return;
+            }
+
+            Vector3 scale = transform.lossyScale;
+            float scaleX = Mathf.Abs(scale.x) > 0.0001f ? Mathf.Abs(scale.x) : 1f;
+            float scaleY = Mathf.Abs(scale.y) > 0.0001f ? Mathf.Abs(scale.y) : 1f;
+
+            float bottom = capsule.offset.y - capsule.size.y * 0.5f;
+            Vector2 size = new Vector2(corpseColliderSize.x / scaleX, corpseColliderSize.y / scaleY);
+
+            capsule.direction = CapsuleDirection2D.Horizontal;
+            capsule.size = size;
+            capsule.offset = new Vector2(capsule.offset.x, bottom + size.y * 0.5f);
+        }
+
+        private void FreezeCorpse()
+        {
+            corpseFrozen = true;
+            body.linearVelocity = Vector2.zero;
+            body.gravityScale = 0f;
+        }
+
         // Reinicia o loop: recarrega a cena (fogueiras voltam apagadas, Marcus volta pra base).
-        // Usado pela queda, espinhos, Barra de Frio e pela fogueira final.
+        // Usado pelo R (inclusive no Game Over) e pela fogueira final.
         public void RestartPrototype()
         {
             // Several hazards can fire in the same frame; the scene must only be reloaded once.
@@ -762,6 +880,12 @@ namespace HookPrototype
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 28
             };
+
+            // No Game Over só a tela de Game Over aparece.
+            if (dead)
+            {
+                return;
+            }
 
             string dashText = dashAvailable ? "DASH PRONTO" : "DASH GASTO";
             Color previousColor = GUI.color;
