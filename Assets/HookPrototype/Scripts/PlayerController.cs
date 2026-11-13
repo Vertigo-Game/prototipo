@@ -110,6 +110,8 @@ namespace HookPrototype
         private readonly List<RaycastHit2D> castHits = new List<RaycastHit2D>();
         private readonly List<Collider2D> overlapHits = new List<Collider2D>();
         private ContactFilter2D solidFilter;
+        private ContactFilter2D groundContactFilter;
+        private readonly List<ContactPoint2D> groundContacts = new List<ContactPoint2D>();
         private float stepRemaining;
         private float stepSpeed;
         private bool settleNextStep;
@@ -213,6 +215,9 @@ namespace HookPrototype
             bodyCollider = GetComponent<Collider2D>();
             baseGravityScale = body.gravityScale;
             solidFilter = new ContactFilter2D { useTriggers = false };
+            groundContactFilter = new ContactFilter2D { useTriggers = false };
+            // Normal entre 30° e 150° = superfície por baixo (inclui quina arredondada); parede fica de fora.
+            groundContactFilter.SetNormalAngle(30f, 150f);
             animator = GetComponentInChildren<Animator>();
             visual = animator != null ? animator.GetComponent<SpriteRenderer>() : null;
 
@@ -610,6 +615,9 @@ namespace HookPrototype
                 {
                     body.position += new Vector2(0f, lift);
                     velocity.y = Mathf.Max(velocity.y, 0f);
+                    // Empurra para cima da borda já neste passo; chegando contra a parede quase parado,
+                    // ele andaria tão pouco que a gravidade puxaria de volta e ele ficaria pairando na quina.
+                    velocity.x = direction * Mathf.Max(Mathf.Abs(velocity.x), runSpeed * 0.5f);
                     return;
                 }
             }
@@ -1039,6 +1047,19 @@ namespace HookPrototype
 
         private bool IsGrounded()
         {
+            // Contatos reais da física com normal apontando para cima: vale em qualquer ponto da base do corpo,
+            // inclusive quando só a quina do corpo está apoiada numa borda. Parede (normal lateral) e teto não contam.
+            groundContacts.Clear();
+            body.GetContacts(groundContactFilter, groundContacts);
+            foreach (ContactPoint2D contact in groundContacts)
+            {
+                if (IsSolidSurface(contact.collider))
+                {
+                    return true;
+                }
+            }
+
+            // Reserva: logo depois de um teleporte/reinício ainda não há contato; olha embaixo dos pés.
             Bounds bounds = bodyCollider.bounds;
             Vector2 center = new Vector2(bounds.center.x, bounds.min.y - 0.06f);
             Vector2 size = new Vector2(bounds.size.x * 0.78f, 0.12f);
