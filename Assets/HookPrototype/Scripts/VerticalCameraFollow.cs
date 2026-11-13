@@ -15,10 +15,12 @@ namespace HookPrototype
 
         private float verticalVelocity;
         private float horizontalVelocity;
+        private PlayerController targetPlayer;
 
         public void SetTarget(Transform followTarget)
         {
             target = followTarget;
+            targetPlayer = null;
         }
 
         private void LateUpdate()
@@ -28,7 +30,17 @@ namespace HookPrototype
                 return;
             }
 
-            float desiredY = Mathf.Max(minimumY, target.position.y + verticalLookAhead);
+            if (targetPlayer == null)
+            {
+                targetPlayer = target.GetComponent<PlayerController>();
+            }
+
+            // No Game Over a câmera desce além do mínimo para o corpo de quem caiu no buraco continuar à vista.
+            float desiredY = target.position.y + verticalLookAhead;
+            if (targetPlayer == null || !targetPlayer.IsDead)
+            {
+                desiredY = Mathf.Max(minimumY, desiredY);
+            }
             float y = Mathf.SmoothDamp(transform.position.y, desiredY, ref verticalVelocity, smoothTime);
             float x = followHorizontally
                 ? Mathf.SmoothDamp(transform.position.x, target.position.x, ref horizontalVelocity, horizontalSmoothTime)
