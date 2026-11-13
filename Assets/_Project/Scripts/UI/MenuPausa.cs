@@ -55,7 +55,8 @@ namespace Vertigo.UI
             if (!Aberto)
             {
                 bool caixaOcupada = caixa != null && (caixa.Aberta || caixa.FrameFechada == Time.frameCount);
-                if (!caixaOcupada && MenuInput.PausePressed())
+                bool gameOver = jogador != null && jogador.IsDead;
+                if (!caixaOcupada && !gameOver && MenuInput.PausePressed())
                 {
                     Abrir();
                 }

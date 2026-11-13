@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Vertigo.Gameplay
 {
     // Barra de Frio: enche longe de fogueiras acesas e esvazia aos poucos perto delas.
-    // Em 100% o Marcos congela e o loop reinicia.
+    // Em 100% o Marcos congela e aparece o Game Over (R reinicia o loop).
     // Usa o tempo do jogo: enche mais devagar na câmera lenta e para na pausa/placa.
     [RequireComponent(typeof(PlayerController))]
     public sealed class BarraDeFrio : MonoBehaviour
@@ -33,7 +33,7 @@ namespace Vertigo.Gameplay
         private void Update()
         {
             float dt = Time.deltaTime;
-            if (dt <= 0f)
+            if (dt <= 0f || jogador.IsDead)
             {
                 return;
             }
@@ -49,7 +49,7 @@ namespace Vertigo.Gameplay
             frio = Mathf.Min(1f, frio + dt / tempoParaCongelar);
             if (frio >= 1f)
             {
-                jogador.RestartPrototype();
+                jogador.Die(CausaDaMorte.Congelamento);
             }
         }
     }
