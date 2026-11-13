@@ -7,9 +7,9 @@ using UnityEngine.InputSystem;
 
 namespace Vertigo.Gameplay
 {
-    // Corda pintada em um Tilemap: com E, o Marcos agarra a corda onde estiver tocando.
+    // Corda pintada em um Tilemap: com E ou segurando cima, o Marcos agarra a corda onde estiver tocando.
     // Aí sobe com cima (W/seta) e desce com baixo (S/seta) até as pontas da corda.
-    // Sai com pulo, dash, E ou clique (ver PlayerController.BeginClimb).
+    // Sai com pulo, dash, E, clique ou passando das pontas (ver PlayerController.BeginClimb).
     [RequireComponent(typeof(Tilemap))]
     public sealed class Corda : MonoBehaviour
     {
@@ -55,7 +55,7 @@ namespace Vertigo.Gameplay
             {
                 avisoMundo = new Vector3(x, jogador.transform.position.y, 0f);
 
-                if (ReadInteractPressed())
+                if (ReadInteractPressed() || ReadUpHeld())
                 {
                     jogador.BeginClimb(x, minY, maxY);
                     podeAgarrar = false;
@@ -130,6 +130,17 @@ namespace Vertigo.Gameplay
             {
                 avisoRect.anchoredPosition = new Vector2(Mathf.Round(local.x), Mathf.Round(local.y));
             }
+        }
+
+        // Segurar cima encostado na corda também agarra (inclusive pulando nela).
+        private static bool ReadUpHeld()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return (Keyboard.current != null && (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)) ||
+                   (Gamepad.current != null && Gamepad.current.leftStick.y.ReadValue() > 0.5f);
+#else
+            return Input.GetAxisRaw("Vertical") > 0.5f;
+#endif
         }
 
         private static bool ReadInteractPressed()
