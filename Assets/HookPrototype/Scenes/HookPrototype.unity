@@ -677,6 +677,7 @@ MonoBehaviour:
   fallGravityMultiplier: 1.6
   maxFallSpeed: 20
   stepHeight: 1.05
+  autoStepUp: 0
   stepUpDuration: 0.08
   cornerCorrection: 0.2
   dashSpeed: 17
@@ -823,7 +824,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 491632ecdd627244f9e5c0a2a2fc973f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.BarraDeFrio
-  tempoParaCongelar: 30
+  tempoParaCongelar: 40
   tempoParaAquecer: 8
   frio: 0
 --- !u!61 &236349426
