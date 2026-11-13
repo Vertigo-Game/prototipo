@@ -33,7 +33,7 @@ namespace Vertigo.UI
 
         [Header("Geada nas bordas")]
         [SerializeField, Range(0f, 1f)] private float inicioVinheta = 0.3f;
-        [SerializeField, Range(0f, 1f)] private float opacidadeMaxVinheta = 0.85f;
+        [SerializeField, Range(0f, 1f)] private float opacidadeMaxVinheta = 0.5f;
         [SerializeField, Tooltip("Quanto a geada começa fora da tela (unidades do Canvas 640x360).")]
         private float recuoInicialVinheta = 90f;
         [SerializeField] private Color corGeada = new Color(0.78f, 0.9f, 1f, 1f);
