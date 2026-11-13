@@ -156,6 +156,20 @@ namespace HookPrototype
         {
             hookCollected = true;
         }
+
+        // Coloca o Marcos parado num ponto (ex.: renascendo no checkpoint). Chamar antes da física começar a rodar.
+        public void Teleportar(Vector2 posicao)
+        {
+            transform.position = new Vector3(posicao.x, posicao.y, transform.position.z);
+            if (body == null)
+            {
+                body = GetComponent<Rigidbody2D>();
+            }
+
+            body.position = posicao;
+            body.linearVelocity = Vector2.zero;
+        }
+
         private bool restarting;
 
         public bool DashAvailable => dashAvailable;

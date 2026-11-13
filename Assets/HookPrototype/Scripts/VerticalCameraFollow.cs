@@ -35,17 +35,42 @@ namespace HookPrototype
                 targetPlayer = target.GetComponent<PlayerController>();
             }
 
+            float y = Mathf.SmoothDamp(transform.position.y, DesiredY(), ref verticalVelocity, smoothTime);
+            float x = followHorizontally
+                ? Mathf.SmoothDamp(transform.position.x, target.position.x, ref horizontalVelocity, horizontalSmoothTime)
+                : 0f;
+            transform.position = new Vector3(x, y, transform.position.z);
+        }
+
+        // Pula direto para o alvo, sem suavizar (ex.: o Marcos renasceu longe, num checkpoint).
+        public void Encaixar()
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (targetPlayer == null)
+            {
+                targetPlayer = target.GetComponent<PlayerController>();
+            }
+
+            verticalVelocity = 0f;
+            horizontalVelocity = 0f;
+            float x = followHorizontally ? target.position.x : 0f;
+            transform.position = new Vector3(x, DesiredY(), transform.position.z);
+        }
+
+        private float DesiredY()
+        {
             // No Game Over a câmera desce além do mínimo para o corpo de quem caiu no buraco continuar à vista.
             float desiredY = target.position.y + verticalLookAhead;
             if (targetPlayer == null || !targetPlayer.IsDead)
             {
                 desiredY = Mathf.Max(minimumY, desiredY);
             }
-            float y = Mathf.SmoothDamp(transform.position.y, desiredY, ref verticalVelocity, smoothTime);
-            float x = followHorizontally
-                ? Mathf.SmoothDamp(transform.position.x, target.position.x, ref horizontalVelocity, horizontalSmoothTime)
-                : 0f;
-            transform.position = new Vector3(x, y, transform.position.z);
+
+            return desiredY;
         }
     }
 }

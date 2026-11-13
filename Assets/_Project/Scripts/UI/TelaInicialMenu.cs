@@ -122,6 +122,8 @@ namespace Vertigo.UI
                 fade.color = Color.black;
             }
 
+            // Jogo novo pela tela inicial: começa do pé da montanha, sem checkpoint da partida anterior.
+            Vertigo.Gameplay.Checkpoint.Limpar();
             SceneManager.LoadScene(cenaDoJogo);
         }
 

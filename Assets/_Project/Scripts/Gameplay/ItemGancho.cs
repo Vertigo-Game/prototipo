@@ -24,6 +24,13 @@ namespace Vertigo.Gameplay
 
         private void Awake()
         {
+            // Renascendo num checkpoint aceso depois de pegar o gancho, o item já foi pego.
+            if (Checkpoint.GanchoGuardadoNa(gameObject.scene))
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+
             if (aviso != null)
             {
                 aviso.alpha = 0f;
