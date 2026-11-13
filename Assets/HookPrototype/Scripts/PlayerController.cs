@@ -31,9 +31,11 @@ namespace HookPrototype
         [SerializeField] private float maxFallSpeed = 20f;
 
         [Header("Collision Assists")]
-        [Tooltip("Degrau mais alto (em tiles) que o Marcus sobe e desce andando, sem pular. 0 desliga.")]
+        [Tooltip("Degrau mais alto (em tiles) que o Marcus desce andando colado no chão (e sobe, se Auto Step Up). 0 desliga.")]
         [SerializeField] private float stepHeight = 1.05f;
-        [Tooltip("Duração da subida automática de um degrau.")]
+        [Tooltip("Subir degraus sozinho andando contra eles. Desligado: degrau sempre pede pulo.")]
+        [SerializeField] private bool autoStepUp = false;
+        [Tooltip("Duração da subida automática de um degrau (só com Auto Step Up).")]
         [SerializeField] private float stepUpDuration = 0.08f;
         [Tooltip("Correção de quina: quanto (em tiles) o pé ou a cabeça pode raspar numa quina e ainda passar. 0 desliga.")]
         [SerializeField] private float cornerCorrection = 0.2f;
@@ -498,7 +500,7 @@ namespace HookPrototype
 
         private bool TryBeginStepUp(float direction)
         {
-            if (stepHeight <= 0f || !HitsFace(new Vector2(direction, 0f), 0.08f, 0.7f))
+            if (!autoStepUp || stepHeight <= 0f || !HitsFace(new Vector2(direction, 0f), 0.08f, 0.7f))
             {
                 return false;
             }
@@ -749,7 +751,10 @@ namespace HookPrototype
             }
 
             animator.SetFloat(SpeedHash, Mathf.Abs(body.linearVelocity.x));
-            animator.SetBool(GroundedHash, IsGrounded() || stepRemaining > 0f);
+            // Na beirada o sensor de chão sai antes do corpo; durante essa janela (sem ter pulado)
+            // continua contando como chão para a animação não piscar para o pulo ao descer degrau.
+            bool onLedgeCorner = wasGroundedLastStep && ungroundedTime <= SnapDownWindow && body.linearVelocity.y > -1f;
+            animator.SetBool(GroundedHash, IsGrounded() || stepRemaining > 0f || onLedgeCorner);
             animator.SetBool(HookModeHash, aiming || pulling);
         }
 

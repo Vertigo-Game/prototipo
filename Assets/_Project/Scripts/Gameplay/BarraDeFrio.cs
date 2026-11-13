@@ -10,7 +10,7 @@ namespace Vertigo.Gameplay
     public sealed class BarraDeFrio : MonoBehaviour
     {
         [SerializeField, Tooltip("Segundos longe do fogo, de vazio até congelar.")]
-        private float tempoParaCongelar = 30f;
+        private float tempoParaCongelar = 40f;
 
         [SerializeField, Tooltip("Segundos perto do fogo para esvaziar a barra cheia.")]
         private float tempoParaAquecer = 8f;
