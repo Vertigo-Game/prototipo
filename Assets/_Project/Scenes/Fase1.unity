@@ -649,7 +649,7 @@ MonoBehaviour:
   duracaoFade: 0.5
   corLiquido: {r: 0.33, g: 0.62, b: 1, a: 1}
   inicioVinheta: 0.3
-  opacidadeMaxVinheta: 0.85
+  opacidadeMaxVinheta: 0.5
   recuoInicialVinheta: 90
   corGeada: {r: 0.78, g: 0.9, b: 1, a: 1}
   opacidadeMaxTingimento: 0.019
