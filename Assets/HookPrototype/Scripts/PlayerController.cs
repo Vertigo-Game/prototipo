@@ -117,6 +117,10 @@ namespace HookPrototype
         private bool settleNextStep;
         private bool wasGroundedLastStep;
         private float ungroundedTime;
+        // Tempo no ar contando todos os estados (dash, gancho, corda), para a animação.
+        private float airTime;
+        // Caindo (sem ter pulado), só mostra a pose de pulo depois disso no ar: degrau e desnível pequeno não piscam.
+        private const float AirborneAnimationDelay = 0.1f;
         private const float SnapDownWindow = 0.15f;
 
         // Velocidade inicial que faz o pulo subir exatamente jumpHeight com a gravidade de subida.
@@ -339,6 +343,8 @@ namespace HookPrototype
                 return;
             }
 
+            airTime = IsGrounded() ? 0f : airTime + Time.fixedDeltaTime;
+
             if (climbing)
             {
                 wasGroundedLastStep = false;
@@ -441,6 +447,7 @@ namespace HookPrototype
                 velocity.y = -drop / Time.fixedDeltaTime;
                 settleNextStep = true;
                 grounded = true;
+                airTime = 0f;
             }
 
             body.linearVelocity = velocity;
@@ -759,10 +766,12 @@ namespace HookPrototype
             }
 
             animator.SetFloat(SpeedHash, Mathf.Abs(body.linearVelocity.x));
-            // Na beirada o sensor de chão sai antes do corpo; durante essa janela (sem ter pulado)
-            // continua contando como chão para a animação não piscar para o pulo ao descer degrau.
-            bool onLedgeCorner = wasGroundedLastStep && ungroundedTime <= SnapDownWindow && body.linearVelocity.y > -1f;
-            animator.SetBool(GroundedHash, IsGrounded() || stepRemaining > 0f || onLedgeCorner);
+            // Pose de pulo só quando está mesmo no ar: subindo (pulo, quique) aparece na hora; caindo de uma
+            // borda, só depois de AirborneAnimationDelay. Assim descer degrau (1-2 frames no ar antes de grudar)
+            // não pisca correndo -> pulo -> parado -> correndo.
+            bool rising = body.linearVelocity.y > 0.5f && stepRemaining <= 0f;
+            bool airborne = !IsGrounded() && (rising || airTime > AirborneAnimationDelay);
+            animator.SetBool(GroundedHash, !airborne);
             animator.SetBool(HookModeHash, aiming || pulling);
         }
 
