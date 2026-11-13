@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3906588545954551849}
   - component: {fileID: 1719568275}
   - component: {fileID: 5690434495127625045}
+  - component: {fileID: 7203521562036904076}
   m_Layer: 0
   m_Name: EnemyHookPoint
   m_TagString: Untagged
@@ -208,3 +209,20 @@ MonoBehaviour:
   cor: {r: 0.92, g: 0.16, b: 0.12, a: 1}
   materialSilhueta: {fileID: 2100000, guid: e7f6468842073a545818fb7c972faa39, type: 2}
   espessuraPixels: 1
+  pixelsPorUnidade: 16
+--- !u!114 &7203521562036904076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719568269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76b779d209f0d074485be0a683794e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.SonsEsfera
+  pontasEntrando: {fileID: 8300000, guid: 9d881e9af7fb43bab4581aa0d71ec47d, type: 3}
+  pontasSaindo: {fileID: 8300000, guid: 0bd16a82b3694421860abca2da040ded, type: 3}
+  morte: {fileID: 8300000, guid: 64c122360c7844f8a9ec8d213f40046d, type: 3}
+  volume: 1

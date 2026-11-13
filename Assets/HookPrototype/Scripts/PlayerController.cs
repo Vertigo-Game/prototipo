@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using Vertigo.Gameplay;
 using Vertigo.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -96,6 +97,7 @@ namespace HookPrototype
         private Animator animator;
         private SpriteRenderer visual;
         private LineRenderer aimLine;
+        private SonsGancho sons;
         private HookTarget currentTarget;
         private Vector2 aimDirection = Vector2.up;
         private float moveInput;
@@ -258,6 +260,7 @@ namespace HookPrototype
             groundContactFilter.SetNormalAngle(30f, 150f);
             animator = GetComponentInChildren<Animator>();
             visual = animator != null ? animator.GetComponent<SpriteRenderer>() : null;
+            sons = GetComponent<SonsGancho>();
 
             aimLine = gameObject.AddComponent<LineRenderer>();
             aimLine.positionCount = 2;
@@ -841,6 +844,11 @@ namespace HookPrototype
             currentTarget = null;
             aimLine.enabled = true;
             SetTimeScale(aimingTimeScale);
+            if (sons != null)
+            {
+                sons.IniciarCameraLenta();
+            }
+
             UpdateAim();
         }
 
@@ -927,6 +935,10 @@ namespace HookPrototype
             // Slow motion exists only while choosing a target.
             SetTimeScale(1f);
             aiming = false;
+            if (sons != null)
+            {
+                sons.PararCameraLenta();
+            }
 
             if (currentTarget == null)
             {
@@ -941,6 +953,10 @@ namespace HookPrototype
             dashTimer = 0f;
             aimLine.enabled = true;
             currentTarget.NotifyHooked();
+            if (sons != null)
+            {
+                sons.TocarConexao();
+            }
         }
 
         private void PullTowardTarget(float windSpeed)
@@ -1008,6 +1024,11 @@ namespace HookPrototype
                 body.linearVelocity = new Vector2(
                     incomingVelocity.x * 0.32f + steering * 3.75f,
                     enemyBounceSpeed + Mathf.Max(0f, incomingVelocity.y * 0.18f));
+                if (sons != null)
+                {
+                    sons.TocarSoltura();
+                }
+
                 reachedTarget.Capture();
             }
             else
@@ -1074,9 +1095,20 @@ namespace HookPrototype
         private void CancelHook(bool preserveVelocity)
         {
             // Only a connected hook counts as a release; a target that was merely aimed at was never hooked.
-            if (pulling && currentTarget != null)
+            bool connected = pulling && currentTarget != null;
+            if (connected)
             {
                 currentTarget.NotifyReleased();
+            }
+
+            if (sons != null)
+            {
+                sons.PararCameraLenta();
+                // Saindo do gancho (soltar, pular ou dar dash do ponto); morrer ou terminar a fase não conta.
+                if (connected && !dead && !completed)
+                {
+                    sons.TocarSoltura();
+                }
             }
 
             aiming = false;
@@ -1191,6 +1223,10 @@ namespace HookPrototype
             if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
             {
                 Die(CausaDaMorte.Perigo);
+                if (dead)
+                {
+                    target.NotifyKilledPlayer();
+                }
             }
         }
 
