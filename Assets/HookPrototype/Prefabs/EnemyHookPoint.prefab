@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1719568274}
   - component: {fileID: 3906588545954551849}
   - component: {fileID: 1719568275}
+  - component: {fileID: 5690434495127625045}
   m_Layer: 0
   m_Name: EnemyHookPoint
   m_TagString: Untagged
@@ -192,3 +193,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b621e1a4a86427aa0729759fb35ff7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.AnimacaoInimigo
+--- !u!114 &5690434495127625045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719568269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b57aa8c456fa0a469754b238194b1a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.ContornoPerigo
+  cor: {r: 0.92, g: 0.16, b: 0.12, a: 1}
+  materialSilhueta: {fileID: 2100000, guid: e7f6468842073a545818fb7c972faa39, type: 2}
+  espessuraPixels: 1
