@@ -10,6 +10,7 @@ namespace Vertigo.Gameplay
         private static readonly Vector2[] Direcoes = { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
         private static readonly int CorId = Shader.PropertyToID("_Color");
 
+        [Tooltip("Cor final do contorno deste inimigo. Substitui a cor do material e pode ser alterada durante o Play.")]
         [SerializeField] private Color cor = new Color(0.92f, 0.16f, 0.12f, 1f);
         [Tooltip("Material com o shader Vertigo/SilhuetaSprite (pinta o sprite inteiro com uma cor só).")]
         [SerializeField] private Material materialSilhueta;
@@ -20,6 +21,8 @@ namespace Vertigo.Gameplay
         private SpriteRenderer original;
         private SpriteRenderer[] copias;
         private RenascimentoInimigo renascimento;
+        private MaterialPropertyBlock bloco;
+        private Color corAplicada;
 
         private void Awake()
         {
@@ -31,8 +34,9 @@ namespace Vertigo.Gameplay
                 return;
             }
 
-            MaterialPropertyBlock bloco = new MaterialPropertyBlock();
+            bloco = new MaterialPropertyBlock();
             bloco.SetColor(CorId, cor);
+            corAplicada = cor;
 
             copias = new SpriteRenderer[Direcoes.Length];
             for (int i = 0; i < Direcoes.Length; i++)
@@ -50,6 +54,13 @@ namespace Vertigo.Gameplay
 
         private void LateUpdate()
         {
+            bool atualizarCor = cor != corAplicada;
+            if (atualizarCor)
+            {
+                bloco.SetColor(CorId, cor);
+                corAplicada = cor;
+            }
+
             Sprite sprite = original.sprite;
             bool visivel = sprite != null && original.enabled && original.gameObject.activeInHierarchy &&
                            (renascimento == null || !renascimento.Capturado);
@@ -63,6 +74,11 @@ namespace Vertigo.Gameplay
             for (int i = 0; i < copias.Length; i++)
             {
                 SpriteRenderer sr = copias[i];
+                if (atualizarCor)
+                {
+                    sr.SetPropertyBlock(bloco);
+                }
+
                 sr.enabled = visivel;
                 if (!visivel)
                 {

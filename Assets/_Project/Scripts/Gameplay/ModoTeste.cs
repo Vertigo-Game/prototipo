@@ -17,8 +17,16 @@ namespace Vertigo.Gameplay
             get => UnityEditor.EditorPrefs.GetBool(Prefixo + "PularMenuInicial", true);
             set => UnityEditor.EditorPrefs.SetBool(Prefixo + "PularMenuInicial", value);
         }
+
+        // Libera o gancho sem coletar o item; desligado, vale a progressão normal.
+        public static bool GanchoLiberado
+        {
+            get => UnityEditor.EditorPrefs.GetBool(Prefixo + "GanchoLiberado", false);
+            set => UnityEditor.EditorPrefs.SetBool(Prefixo + "GanchoLiberado", value);
+        }
 #else
         public static bool Ativo => false;
+        public static bool GanchoLiberado => false;
 #endif
     }
 }

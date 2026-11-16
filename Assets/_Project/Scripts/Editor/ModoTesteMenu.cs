@@ -7,6 +7,7 @@ namespace Vertigo.EditorTools
     {
         private const string MenuAtivo = "Vertigo/Modo teste/Ativar (sem morte por frio)";
         private const string MenuPular = "Vertigo/Modo teste/Pular menu inicial";
+        private const string MenuGancho = "Vertigo/Modo teste/Gancho liberado (sem coletar item)";
 
         [MenuItem(MenuAtivo)]
         private static void Alternar()
@@ -33,6 +34,19 @@ namespace Vertigo.EditorTools
         private static bool ValidarPular()
         {
             Menu.SetChecked(MenuPular, ModoTeste.PularMenuInicial);
+            return true;
+        }
+
+        [MenuItem(MenuGancho)]
+        private static void AlternarGancho()
+        {
+            ModoTeste.GanchoLiberado = !ModoTeste.GanchoLiberado;
+        }
+
+        [MenuItem(MenuGancho, true)]
+        private static bool ValidarGancho()
+        {
+            Menu.SetChecked(MenuGancho, ModoTeste.GanchoLiberado);
             return true;
         }
     }

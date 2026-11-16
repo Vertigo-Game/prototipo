@@ -3,23 +3,31 @@ using UnityEngine;
 
 namespace HookPrototype
 {
-    /// <summary>A horizontal wind band positioned in the world, independent of camera movement.</summary>
+    /// <summary>A directional wind band positioned in the world, independent of camera movement.</summary>
     [DisallowMultipleComponent]
     public sealed class WindArea : MonoBehaviour
     {
-        public enum OriginSide { Left, Right }
+        // Preserve the serialized values of existing horizontal wind areas.
+        public enum OriginSide
+        {
+            [InspectorName("Esquerda → Direita")] Left = 0,
+            [InspectorName("Direita → Esquerda")] Right = 1,
+            [InspectorName("Baixo → Cima")] Bottom = 2,
+            [InspectorName("Cima → Baixo")] Top = 3
+        }
 
-        [Header("Área (posição X = origem; posição Y = centro da faixa)")]
+        [Header("Área de vento")]
+        [Tooltip("Lado de onde o vento sai. O Transform fica no centro desse lado da área.")]
         [SerializeField] private OriginSide origin = OriginSide.Left;
         [SerializeField, Min(0.1f)] private float width = 10f;
         [SerializeField, Min(0.1f)] private float height = 3f;
 
         [Header("Empurrão")]
-        [Tooltip("Aceleração horizontal em unidades/s², independente da aceleração do jogador. Zero desliga o vento.")]
+        [Tooltip("Aceleração na direção do vento em unidades/s². Zero desliga o vento.")]
         [SerializeField, Min(0f)] private float strength = 30f;
-        [Tooltip("Velocidade mínima na direção do vento ao entrar na área, inclusive por baixo. Zero remove o lançamento inicial.")]
+        [Tooltip("Velocidade mínima na direção do vento ao entrar na área. Zero remove o lançamento inicial.")]
         [SerializeField, Min(0f)] private float launchSpeed = 10f;
-        [Tooltip("Velocidade horizontal máxima produzida pelo vento. Não freia um jogador que já esteja mais rápido na mesma direção.")]
+        [Tooltip("Velocidade máxima na direção do vento. Não freia um jogador que já esteja mais rápido na mesma direção.")]
         [SerializeField, Min(0.1f)] private float maxSpeed = 30f;
 
         [Header("Linhas de vento")]
@@ -46,32 +54,49 @@ namespace HookPrototype
         private Material fallbackMaterial;
         private float animationTime;
 
+        public Vector2 Direction => origin switch
+        {
+            OriginSide.Right => Vector2.left,
+            OriginSide.Bottom => Vector2.up,
+            OriginSide.Top => Vector2.down,
+            _ => Vector2.right
+        };
+
         public readonly struct Influence
         {
-            public readonly float Acceleration;
-            public readonly float MaxSpeed;
-            public readonly float LaunchSpeed;
-            public bool Active => !Mathf.Approximately(Acceleration, 0f);
+            public readonly Vector2 Acceleration;
+            public readonly Vector2 MaxSpeed;
+            public readonly Vector2 LaunchSpeed;
+            public bool HorizontalActive => !Mathf.Approximately(Acceleration.x, 0f);
+            public bool VerticalActive => !Mathf.Approximately(Acceleration.y, 0f);
+            public bool Active => HorizontalActive || VerticalActive;
 
-            public Influence(float acceleration, float maxSpeed, float launchSpeed)
+            public Influence(Vector2 acceleration, Vector2 maxSpeed, Vector2 launchSpeed)
             {
                 Acceleration = acceleration;
                 MaxSpeed = maxSpeed;
                 LaunchSpeed = launchSpeed;
             }
 
-            public float Apply(float horizontalVelocity, float deltaTime)
+            public Vector2 Apply(Vector2 velocity, float deltaTime)
             {
-                if (!Active) return horizontalVelocity;
-                float direction = Mathf.Sign(Acceleration);
-                float speed = horizontalVelocity * direction;
-                if (LaunchSpeed > 0f)
+                return new Vector2(
+                    ApplyAxis(velocity.x, Acceleration.x, MaxSpeed.x, LaunchSpeed.x, deltaTime),
+                    ApplyAxis(velocity.y, Acceleration.y, MaxSpeed.y, LaunchSpeed.y, deltaTime));
+            }
+
+            private static float ApplyAxis(float velocity, float acceleration, float maxSpeed, float launchSpeed, float deltaTime)
+            {
+                if (Mathf.Approximately(acceleration, 0f)) return velocity;
+                float direction = Mathf.Sign(acceleration);
+                float speed = velocity * direction;
+                if (launchSpeed > 0f)
                 {
-                    speed = Mathf.Max(speed, Mathf.Min(LaunchSpeed, MaxSpeed));
+                    speed = Mathf.Max(speed, Mathf.Min(launchSpeed, maxSpeed));
                 }
-                if (speed < MaxSpeed)
+                if (speed < maxSpeed)
                 {
-                    speed = Mathf.Min(MaxSpeed, speed + Mathf.Abs(Acceleration) * deltaTime);
+                    speed = Mathf.Min(maxSpeed, speed + Mathf.Abs(acceleration) * deltaTime);
                 }
                 return speed * direction;
             }
@@ -98,10 +123,10 @@ namespace HookPrototype
             }
 
             Bounds playerBounds = playerCollider.bounds;
-            float acceleration = 0f;
-            float leftMax = 0f;
-            float rightMax = 0f;
-            float launch = 0f;
+            Vector2 acceleration = Vector2.zero;
+            Vector2 negativeMax = Vector2.zero;
+            Vector2 positiveMax = Vector2.zero;
+            Vector2 launch = Vector2.zero;
             previousAreas.IntersectWith(ActiveAreas);
             foreach (WindArea area in ActiveAreas)
             {
@@ -115,28 +140,31 @@ namespace HookPrototype
                 if (playerBounds.max.x > rect.xMin && playerBounds.min.x < rect.xMax &&
                     playerBounds.max.y > rect.yMin && playerBounds.min.y < rect.yMax)
                 {
-                    float direction = area.origin == OriginSide.Left ? 1f : -1f;
+                    Vector2 direction = area.Direction;
                     acceleration += direction * area.strength;
-                    if (direction > 0f) rightMax = Mathf.Max(rightMax, area.maxSpeed);
-                    else leftMax = Mathf.Max(leftMax, area.maxSpeed);
+                    positiveMax = Vector2.Max(positiveMax, direction * area.maxSpeed);
+                    negativeMax = Vector2.Max(negativeMax, -direction * area.maxSpeed);
                     if (previousAreas.Add(area)) launch += direction * area.launchSpeed;
                 }
                 else previousAreas.Remove(area);
             }
 
             // Entry launch happens once per contact, not once per physics tick or dash.
-            float sign = Mathf.Sign(acceleration);
-            return new Influence(acceleration, sign > 0f ? rightMax : leftMax, Mathf.Max(0f, sign * launch));
+            Vector2 max = new Vector2(acceleration.x > 0f ? positiveMax.x : negativeMax.x,
+                acceleration.y > 0f ? positiveMax.y : negativeMax.y);
+            Vector2 entry = new Vector2(Mathf.Max(0f, Mathf.Sign(acceleration.x) * launch.x),
+                Mathf.Max(0f, Mathf.Sign(acceleration.y) * launch.y));
+            return new Influence(acceleration, max, entry);
         }
 
         public bool TryGetArea(out Rect area)
         {
             // The source is a world position. A following camera must never move the wind band.
-            float edge = transform.position.x;
             float areaWidth = Mathf.Max(0.1f, width);
             float areaHeight = Mathf.Max(0.1f, height);
-            area = new Rect(origin == OriginSide.Left ? edge : edge - areaWidth,
-                transform.position.y - areaHeight * 0.5f, areaWidth, areaHeight);
+            Vector2 size = new Vector2(areaWidth, areaHeight);
+            Vector2 center = (Vector2)transform.position + Vector2.Scale(Direction, size) * 0.5f;
+            area = new Rect(center - size * 0.5f, size);
             return true;
         }
 
@@ -159,37 +187,47 @@ namespace HookPrototype
             triangles.Clear();
             float pixelSize = 1f / Mathf.Max(1, pixelsPerUnit);
             float thickness = Mathf.Max(1f, Mathf.Round(lineWidth / pixelSize)) * pixelSize;
-            float fadeDistance = Mathf.Min(Mathf.Max(pixelSize, fadeOutDistance), area.width);
+            Vector2 direction = Direction;
+            bool horizontal = direction.x != 0f;
+            float span = horizontal ? area.width : area.height;
+            float crossSpan = horizontal ? area.height : area.width;
+            float fadeDistance = Mathf.Min(Mathf.Max(pixelSize, fadeOutDistance), span);
             Matrix4x4 worldToLocal = transform.worldToLocalMatrix;
             for (int i = 0; i < lineCount; i++)
             {
                 float seed = Mathf.Repeat(i * 0.618034f, 1f);
-                float length = Mathf.Min(lineLength * (0.65f + seed * 0.7f), area.width);
-                float travelLength = area.width + length;
+                float length = Mathf.Min(lineLength * (0.65f + seed * 0.7f), span);
+                float travelLength = span + length;
                 float progress = Mathf.Repeat(seed + animationTime * visualSpeed / travelLength, 1f);
                 float head = progress * travelLength;
                 float row = Mathf.Repeat(i * 0.381966f + 0.13f, 1f);
-                float y = Mathf.Lerp(area.yMin, area.yMax, row);
-                float amplitude = Mathf.Min(waveAmplitude, area.height * 0.15f);
+                float cross = horizontal ? Mathf.Lerp(area.yMin, area.yMax, row) : Mathf.Lerp(area.xMin, area.xMax, row);
+                float amplitude = Mathf.Min(waveAmplitude, crossSpan * 0.15f);
                 int columns = Mathf.Clamp(Mathf.CeilToInt(length / pixelSize), 1, 512);
                 for (int column = 0; column <= columns; column++)
                 {
                     float t = column / (float)columns;
                     float distance = head - length + column * pixelSize;
                     // Never clamp points to an edge: that stacks them into a visible wall.
-                    if (distance < 0f || distance >= area.width) continue;
-                    float x = origin == OriginSide.Left ? area.xMin + distance : area.xMax - distance;
+                    if (distance < 0f || distance >= span) continue;
                     float wave = Mathf.Sin(t * Mathf.PI * 2f + seed * 8f + animationTime * 3f) * amplitude;
+                    float along = horizontal
+                        ? (direction.x > 0f ? area.xMin + distance : area.xMax - distance)
+                        : (direction.y > 0f ? area.yMin + distance : area.yMax - distance);
+                    float x = horizontal ? along : cross + wave;
+                    float y = horizontal ? cross + wave : along;
                     x = Mathf.Floor(x / pixelSize) * pixelSize;
-                    float pixelY = Mathf.Floor((y + wave) / pixelSize) * pixelSize;
-                    if (pixelY < area.yMin || pixelY + thickness > area.yMax) continue;
+                    y = Mathf.Floor(y / pixelSize) * pixelSize;
+                    float pixelWidth = horizontal ? pixelSize : thickness;
+                    float pixelHeight = horizontal ? thickness : pixelSize;
+                    if (x < area.xMin || x + pixelWidth > area.xMax || y < area.yMin || y + pixelHeight > area.yMax) continue;
 
-                    float fadeOut = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((area.width - distance) / fadeDistance));
-                    float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(distance / Mathf.Min(pixelSize * 3f, area.width)));
+                    float fadeOut = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((span - distance) / fadeDistance));
+                    float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(distance / Mathf.Min(pixelSize * 3f, span)));
                     Color tint = color;
                     tint.a *= fadeIn * fadeOut * Mathf.Lerp(0.25f, 1f, t);
                     if (tint.a < 1f / 255f) continue;
-                    AddPixel(x, pixelY, pixelSize, thickness, tint, worldToLocal);
+                    AddPixel(x, y, pixelWidth, pixelHeight, tint, worldToLocal);
                 }
             }
 
@@ -275,11 +313,13 @@ namespace HookPrototype
             Gizmos.DrawCube(center, new Vector3(area.width, area.height, 0f));
             Gizmos.color = new Color(color.r, color.g, color.b, 0.8f);
             Gizmos.DrawWireCube(center, new Vector3(area.width, area.height, 0f));
-            float direction = origin == OriginSide.Left ? 1f : -1f;
-            Vector3 tip = center + Vector3.right * direction * Mathf.Min(1f, area.width * 0.3f);
+            Vector3 direction = Direction;
+            Vector3 across = new Vector3(-direction.y, direction.x, 0f);
+            float span = direction.x != 0f ? area.width : area.height;
+            Vector3 tip = center + direction * Mathf.Min(1f, span * 0.3f);
             Gizmos.DrawLine(center, tip);
-            Gizmos.DrawLine(tip, tip + new Vector3(-direction * 0.2f, 0.15f, 0f));
-            Gizmos.DrawLine(tip, tip + new Vector3(-direction * 0.2f, -0.15f, 0f));
+            Gizmos.DrawLine(tip, tip - direction * 0.2f + across * 0.15f);
+            Gizmos.DrawLine(tip, tip - direction * 0.2f - across * 0.15f);
             Gizmos.color = previous;
         }
     }

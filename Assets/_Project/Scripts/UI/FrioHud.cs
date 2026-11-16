@@ -59,6 +59,7 @@ namespace Vertigo.UI
         {
             barra = GetComponent<BarraDeFrio>();
             MontarHud();
+            raiz.SetActive(!ModoTeste.Ativo);
         }
 
         private void OnDestroy()
@@ -79,6 +80,16 @@ namespace Vertigo.UI
 
         private void LateUpdate()
         {
+            bool mostrar = !ModoTeste.Ativo;
+            if (raiz.activeSelf != mostrar)
+            {
+                raiz.SetActive(mostrar);
+            }
+            if (!mostrar)
+            {
+                return;
+            }
+
             float frio = barra.Frio;
 
             // Frasco: nível travado nas linhas de pixel da textura.

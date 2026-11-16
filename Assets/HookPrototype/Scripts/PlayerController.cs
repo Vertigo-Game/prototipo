@@ -153,7 +153,7 @@ namespace HookPrototype
         public bool CanGrabRope => !dead && !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f &&
                                    Time.time - ropeReleaseTime >= ropeRegrabDelay;
         public Bounds BodyBounds => bodyCollider.bounds;
-        public bool HasHook => startsWithHook || hookCollected;
+        public bool HasHook => startsWithHook || hookCollected || ModoTeste.GanchoLiberado;
 
         // Chamado pelo item do gancho. Vale só até reiniciar a fase (a cena é recarregada).
         public void CollectHook()
@@ -310,6 +310,12 @@ namespace HookPrototype
                 return;
             }
 
+            // Desligar o gancho de teste também encerra uma mira ou conexão em andamento.
+            if (!HasHook && (aiming || pulling))
+            {
+                CancelHook(true);
+            }
+
             moveInput = ReadHorizontal();
             if (Mathf.Abs(moveInput) > 0.1f)
             {
@@ -422,11 +428,17 @@ namespace HookPrototype
             }
 
             WindArea.Influence wind = WindArea.Sample(bodyCollider, previousWindAreas);
+            if (wind.VerticalActive)
+            {
+                CancelStep();
+                settleNextStep = false;
+                jumpCutArmed = false;
+            }
 
             if (pulling)
             {
                 wasGroundedLastStep = false;
-                PullTowardTarget(wind.Active);
+                PullTowardTarget(wind);
                 ApplyWind(wind);
                 return;
             }
@@ -441,7 +453,7 @@ namespace HookPrototype
                     body.gravityScale = baseGravityScale;
                     // Sem impulso do vento, mantém a saída curta do dash de develop.
                     // No vento ou ainda no ar após sair dele, preserva o impulso acumulado.
-                    if (!wind.Active && !windPropelled)
+                    if (!wind.HorizontalActive && !windPropelled)
                     {
                         float exitDirection = Mathf.Abs(moveInput) > 0.1f ? moveInput : dashDirection;
                         dashVelocity.x = exitDirection * runSpeed;
@@ -463,7 +475,7 @@ namespace HookPrototype
 
             if (stepRemaining > 0f)
             {
-                ContinueStepUp(wind.Active || windPropelled ? body.linearVelocity.x : moveInput * runSpeed);
+                ContinueStepUp(wind.HorizontalActive || windPropelled ? body.linearVelocity.x : moveInput * runSpeed);
                 ApplyWind(wind);
                 return;
             }
@@ -493,18 +505,18 @@ namespace HookPrototype
 
             // Mirando no chão o Marcus fica parado; no ar continua dando para controlar.
             float horizontalInput = aiming && grounded ? 0f : moveInput;
-            bool preserveMomentum = wind.Active || (windPropelled && !grounded);
+            bool preserveMomentum = wind.HorizontalActive || (windPropelled && !grounded);
             bool steering = Mathf.Abs(horizontalInput) > 0.1f &&
                 (Mathf.Sign(horizontalInput) != Mathf.Sign(velocity.x) || Mathf.Abs(velocity.x) < runSpeed);
             if (!preserveMomentum || steering)
             {
                 velocity.x = Mathf.MoveTowards(velocity.x, horizontalInput * runSpeed, acceleration * Time.fixedDeltaTime);
             }
-            if (!wind.Active && (grounded || Mathf.Abs(velocity.x) <= runSpeed)) windPropelled = false;
+            if (!wind.HorizontalActive && (grounded || Mathf.Abs(velocity.x) <= runSpeed)) windPropelled = false;
             float moveDirection = Mathf.Abs(horizontalInput) > 0.1f ? Mathf.Sign(horizontalInput) : 0f;
 
             // Andando contra um degrau baixo: sobe sozinho em vez de travar.
-            if (grounded && moveDirection != 0f && velocity.y <= 0.01f && TryBeginStepUp(moveDirection))
+            if (!wind.VerticalActive && grounded && moveDirection != 0f && velocity.y <= 0.01f && TryBeginStepUp(moveDirection))
             {
                 ContinueStepUp(velocity.x);
                 ApplyWind(wind);
@@ -516,14 +528,14 @@ namespace HookPrototype
                 ApplyCornerCorrection(ref velocity, moveDirection);
             }
 
-            // Gravidade maior só na descida, com limite de velocidade de queda.
+            // Gravidade maior na descida; dentro de vento vertical, vale o limite do vento.
             body.gravityScale = velocity.y < 0f ? baseGravityScale * fallGravityMultiplier : baseGravityScale;
-            velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
+            if (!wind.VerticalActive) velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
 
             // Andando para fora de um degrau baixo: gruda no degrau de baixo em vez de cair.
             // O sensor de chão é mais estreito que o corpo, então a quina do corpo ainda pode estar apoiada
             // por alguns frames depois de "sair do chão": tenta durante uma janela curta, enquanto não pulou.
-            if (!grounded && wasGroundedLastStep && ungroundedTime <= SnapDownWindow &&
+            if (!wind.VerticalActive && !grounded && wasGroundedLastStep && ungroundedTime <= SnapDownWindow &&
                 moveDirection != 0f && velocity.y <= 0.01f && TrySnapDown(out float drop))
             {
                 velocity.y = -drop / Time.fixedDeltaTime;
@@ -542,10 +554,8 @@ namespace HookPrototype
         {
             // Aplica depois de cada estado para o movimento não apagar a aceleração do vento.
             if (!wind.Active || hanging || climbing || completed) return;
-            Vector2 velocity = body.linearVelocity;
-            velocity.x = wind.Apply(velocity.x, Time.fixedDeltaTime);
-            body.linearVelocity = velocity;
-            windPropelled = true;
+            body.linearVelocity = wind.Apply(body.linearVelocity, Time.fixedDeltaTime);
+            windPropelled |= wind.HorizontalActive;
         }
 
         // ---------- Degraus e quinas ----------
@@ -989,7 +999,7 @@ namespace HookPrototype
             }
         }
 
-        private void PullTowardTarget(bool inWind)
+        private void PullTowardTarget(WindArea.Influence wind)
         {
             // A connected hook must always run at full game speed.
             if (!Mathf.Approximately(Time.timeScale, 1f))
@@ -1029,8 +1039,9 @@ namespace HookPrototype
 
             Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed;
             Vector2 preservedVelocity = body.linearVelocity * 0.32f;
-            // Hook steering can oppose the wind, but must not erase its horizontal momentum every tick.
-            if (inWind) preservedVelocity.x = body.linearVelocity.x;
+            // Hook steering can oppose the wind, but must not erase momentum on the affected axes every tick.
+            if (wind.HorizontalActive) preservedVelocity.x = body.linearVelocity.x;
+            if (wind.VerticalActive) preservedVelocity.y = body.linearVelocity.y;
             body.linearVelocity = Vector2.MoveTowards(
                 preservedVelocity,
                 desiredVelocity,
