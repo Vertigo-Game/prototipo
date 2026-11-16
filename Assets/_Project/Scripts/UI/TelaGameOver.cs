@@ -11,7 +11,7 @@ namespace Vertigo.UI
     public sealed class TelaGameOver : MonoBehaviour
     {
         private const string Titulo = "GAME OVER";
-        private const string Dica = "Aperte 'R' para tentar novamente";
+        private static string Dica => "Aperte '" + Gameplay.ControlesJogo.Tecla((int)Gameplay.AcaoJogo.Reiniciar) + "' para tentar novamente";
 
         // A fonte pixel (PixelifySans 11px) fica nítida em múltiplos de 11.
         private const float TamanhoTitulo = 66f;
