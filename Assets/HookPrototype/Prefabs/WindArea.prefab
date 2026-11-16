@@ -47,8 +47,9 @@ MonoBehaviour:
   origin: 0
   width: 10
   height: 3
-  sourceCamera: {fileID: 0}
-  strength: 4
+  strength: 60
+  launchSpeed: 14
+  maxSpeed: 30
   lineMaterial: {fileID: 2100000, guid: 469f8d93acd217649b4bf092ad996cb6, type: 2}
   lineCount: 24
   color: {r: 0.8, g: 0.95, b: 1, a: 0.55}
@@ -57,3 +58,5 @@ MonoBehaviour:
   waveAmplitude: 0.08
   visualSpeed: 5
   sortingOrder: 8
+  pixelsPerUnit: 16
+  fadeOutDistance: 2

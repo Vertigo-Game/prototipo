@@ -103,6 +103,8 @@ namespace HookPrototype
         private float moveInput;
         private float dashTimer;
         private float dashDirection;
+        private readonly HashSet<WindArea> previousWindAreas = new HashSet<WindArea>();
+        private bool windPropelled;
         private float baseGravityScale;
         private bool dashAvailable = true;
         private bool aiming;
@@ -170,6 +172,8 @@ namespace HookPrototype
 
             body.position = posicao;
             body.linearVelocity = Vector2.zero;
+            previousWindAreas.Clear();
+            windPropelled = false;
         }
 
         private bool restarting;
@@ -183,6 +187,8 @@ namespace HookPrototype
         // clique, descendo além da ponta de baixo ou subindo além do topo (ganha um impulso).
         public void BeginClimb(float x, float minY, float maxY)
         {
+            windPropelled = false;
+            previousWindAreas.Clear();
             climbing = true;
             climbStartFrame = Time.frameCount;
             climbInput = 0f;
@@ -414,13 +420,14 @@ namespace HookPrototype
                 UpdateClimbPhysics();
                 return;
             }
-            // Sample here so input, dash and hook cannot overwrite an independent force callback.
-            float windSpeed = WindArea.Sample(bodyCollider);
+
+            WindArea.Influence wind = WindArea.Sample(bodyCollider, previousWindAreas);
 
             if (pulling)
             {
                 wasGroundedLastStep = false;
-                PullTowardTarget(windSpeed);
+                PullTowardTarget(wind.Active);
+                ApplyWind(wind);
                 return;
             }
 
@@ -428,32 +435,36 @@ namespace HookPrototype
             {
                 wasGroundedLastStep = false;
                 Vector2 dashVelocity = body.linearVelocity;
-                dashVelocity.x = dashDirection * dashSpeed + windSpeed;
                 dashTimer -= Time.fixedDeltaTime;
                 if (dashTimer <= 0f)
                 {
                     body.gravityScale = baseGravityScale;
-                    // Sai do dash na velocidade de corrida (na direção do input, ou na do dash
-                    // sem input) e o controle normal desacelera dali: sem o deslize longo de antes,
-                    // mas também sem parar seco.
-                    float exitDirection = Mathf.Abs(moveInput) > 0.1f ? moveInput : dashDirection;
-                    dashVelocity.x = exitDirection * runSpeed + windSpeed;
+                    // Sem impulso do vento, mantém a saída curta do dash de develop.
+                    // No vento ou ainda no ar após sair dele, preserva o impulso acumulado.
+                    if (!wind.Active && !windPropelled)
+                    {
+                        float exitDirection = Mathf.Abs(moveInput) > 0.1f ? moveInput : dashDirection;
+                        dashVelocity.x = exitDirection * runSpeed;
+                    }
                 }
 
                 body.linearVelocity = dashVelocity;
+                ApplyWind(wind);
                 return;
             }
 
             if (coasting)
             {
                 wasGroundedLastStep = false;
-                Coast(windSpeed);
+                Coast();
+                ApplyWind(wind);
                 return;
             }
 
             if (stepRemaining > 0f)
             {
-                ContinueStepUp(moveInput * runSpeed + windSpeed);
+                ContinueStepUp(wind.Active || windPropelled ? body.linearVelocity.x : moveInput * runSpeed);
+                ApplyWind(wind);
                 return;
             }
 
@@ -482,13 +493,21 @@ namespace HookPrototype
 
             // Mirando no chão o Marcus fica parado; no ar continua dando para controlar.
             float horizontalInput = aiming && grounded ? 0f : moveInput;
-            velocity.x = Mathf.MoveTowards(velocity.x, horizontalInput * runSpeed + windSpeed, acceleration * Time.fixedDeltaTime);
+            bool preserveMomentum = wind.Active || (windPropelled && !grounded);
+            bool steering = Mathf.Abs(horizontalInput) > 0.1f &&
+                (Mathf.Sign(horizontalInput) != Mathf.Sign(velocity.x) || Mathf.Abs(velocity.x) < runSpeed);
+            if (!preserveMomentum || steering)
+            {
+                velocity.x = Mathf.MoveTowards(velocity.x, horizontalInput * runSpeed, acceleration * Time.fixedDeltaTime);
+            }
+            if (!wind.Active && (grounded || Mathf.Abs(velocity.x) <= runSpeed)) windPropelled = false;
             float moveDirection = Mathf.Abs(horizontalInput) > 0.1f ? Mathf.Sign(horizontalInput) : 0f;
 
             // Andando contra um degrau baixo: sobe sozinho em vez de travar.
             if (grounded && moveDirection != 0f && velocity.y <= 0.01f && TryBeginStepUp(moveDirection))
             {
                 ContinueStepUp(velocity.x);
+                ApplyWind(wind);
                 return;
             }
 
@@ -514,8 +533,19 @@ namespace HookPrototype
             }
 
             body.linearVelocity = velocity;
+            ApplyWind(wind);
             // Continua elegível para grudar enquanto estiver dentro da janela e sem subir.
             wasGroundedLastStep = grounded || (wasGroundedLastStep && ungroundedTime <= SnapDownWindow && velocity.y <= 0.01f);
+        }
+
+        private void ApplyWind(WindArea.Influence wind)
+        {
+            // Aplica depois de cada estado para o movimento não apagar a aceleração do vento.
+            if (!wind.Active || hanging || climbing || completed) return;
+            Vector2 velocity = body.linearVelocity;
+            velocity.x = wind.Apply(velocity.x, Time.fixedDeltaTime);
+            body.linearVelocity = velocity;
+            windPropelled = true;
         }
 
         // ---------- Degraus e quinas ----------
@@ -959,7 +989,7 @@ namespace HookPrototype
             }
         }
 
-        private void PullTowardTarget(float windSpeed)
+        private void PullTowardTarget(bool inWind)
         {
             // A connected hook must always run at full game speed.
             if (!Mathf.Approximately(Time.timeScale, 1f))
@@ -997,8 +1027,10 @@ namespace HookPrototype
                 return;
             }
 
-            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed + Vector2.right * windSpeed;
+            Vector2 desiredVelocity = toTarget.normalized * hookPullSpeed;
             Vector2 preservedVelocity = body.linearVelocity * 0.32f;
+            // Hook steering can oppose the wind, but must not erase its horizontal momentum every tick.
+            if (inWind) preservedVelocity.x = body.linearVelocity.x;
             body.linearVelocity = Vector2.MoveTowards(
                 preservedVelocity,
                 desiredVelocity,
@@ -1034,6 +1066,7 @@ namespace HookPrototype
             else
             {
                 hanging = true;
+                windPropelled = false;
                 pulling = true;
                 dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
@@ -1071,10 +1104,9 @@ namespace HookPrototype
             body.linearVelocity = direction * speed;
         }
 
-        private void Coast(float windSpeed)
+        private void Coast()
         {
-            Vector2 drift = Vector2.right * windSpeed;
-            Vector2 velocity = body.linearVelocity - drift;
+            Vector2 velocity = body.linearVelocity;
             float speed = velocity.magnitude;
             if (speed <= momentumEndSpeed)
             {
@@ -1083,7 +1115,7 @@ namespace HookPrototype
             }
 
             speed = Mathf.Max(momentumEndSpeed, speed - momentumDeceleration * Time.fixedDeltaTime);
-            body.linearVelocity = velocity.normalized * speed + drift;
+            body.linearVelocity = velocity.normalized * speed;
         }
 
         private void EndCoast()
@@ -1346,6 +1378,8 @@ namespace HookPrototype
 
         private void OnDisable()
         {
+            previousWindAreas.Clear();
+            windPropelled = false;
             SetTimeScale(1f);
         }
 
