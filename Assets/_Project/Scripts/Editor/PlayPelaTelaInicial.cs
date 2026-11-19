@@ -42,9 +42,16 @@ namespace Vertigo.EditorTools
         internal static void Aplicar()
         {
             // Preferência do editor: continua valendo após R, Stop/Play e recarga de scripts.
+            string cenaAtual = SceneManager.GetActiveScene().path;
+            if (cenaAtual == "Assets/_Project/Scenes/Fase1_Validacao.unity")
+            {
+                EditorSceneManager.playModeStartScene = null;
+                return;
+            }
+
             if (ModoTeste.Ativo && ModoTeste.PularMenuInicial)
             {
-                bool estaNoMenu = SceneManager.GetActiveScene().path == "Assets/_Project/Scenes/TelaInicial.unity";
+                bool estaNoMenu = cenaAtual == "Assets/_Project/Scenes/TelaInicial.unity";
                 EditorSceneManager.playModeStartScene = estaNoMenu
                     ? AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/_Project/Scenes/Fase1.unity")
                     : null;
