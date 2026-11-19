@@ -17,6 +17,8 @@ namespace Vertigo.Gameplay
         [SerializeField] private Vector2 deslocamentoAviso = new Vector2(0f, 1.25f);
         [SerializeField] private float duracaoFadeAviso = 0.25f;
 
+        [SerializeField] private bool guardarNoCheckpoint;
+
         private PlayerController jogador;
         private RectTransform avisoRect;
         private RectTransform avisoPai;
@@ -64,6 +66,11 @@ namespace Vertigo.Gameplay
             if (podePegar && ReadInteractPressed())
             {
                 jogador.CollectHook();
+                if (guardarNoCheckpoint)
+                {
+                    Checkpoint.GuardarGancho(gameObject.scene);
+                }
+
                 jogador.BeginInteractAnimation();
                 if (aviso != null)
                 {

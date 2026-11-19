@@ -28,6 +28,14 @@ namespace Vertigo.Gameplay
             return Ativo && cena == candidata.gameObject.scene.buildIndex && fogueira == candidata.name;
         }
 
+        internal static void GuardarGancho(Scene origem)
+        {
+            if (Ativo && cena == origem.buildIndex)
+            {
+                ComGancho = true;
+            }
+        }
+
         public static bool GanchoGuardadoNa(Scene alvo)
         {
             return Ativo && ComGancho && cena == alvo.buildIndex;
