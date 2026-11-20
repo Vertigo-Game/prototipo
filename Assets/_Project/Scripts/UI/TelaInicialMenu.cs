@@ -8,7 +8,7 @@ namespace Vertigo.UI
 {
     public sealed class TelaInicialMenu : MonoBehaviour, IMenuVertical
     {
-        [Header("Itens (0 = Jogar, 1 = Sair)")]
+        [Header("Itens (0 = Jogar)")]
         [SerializeField] private TMP_Text[] itens;
         [SerializeField] private TMP_Text marcador;
         [SerializeField] private float distanciaMarcador = 16f;
@@ -90,20 +90,13 @@ namespace Vertigo.UI
 
         public void Confirmar(int indice)
         {
-            if (confirmando)
+            if (confirmando || indice != 0)
             {
                 return;
             }
 
             Selecionar(indice);
-            if (indice == 0)
-            {
-                StartCoroutine(FadeECarregar());
-            }
-            else
-            {
-                Sair();
-            }
+            StartCoroutine(FadeECarregar());
         }
 
         private IEnumerator FadeECarregar()
@@ -127,13 +120,5 @@ namespace Vertigo.UI
             SceneManager.LoadScene(cenaDoJogo);
         }
 
-        private static void Sair()
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
     }
 }

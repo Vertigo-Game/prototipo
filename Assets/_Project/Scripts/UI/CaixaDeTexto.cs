@@ -166,8 +166,7 @@ namespace Vertigo.UI
         private static bool ReadConfirmPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) ||
-                   (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+            return Vertigo.Gameplay.ControlesJogo.Interagir();
 #else
             return Input.GetKeyDown(KeyCode.E);
 #endif

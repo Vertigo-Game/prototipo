@@ -242,8 +242,19 @@ namespace HookPrototype
             }
         }
 
-        // Set while a sign is being read: the game is paused and gameplay input is ignored.
-        public bool InputLocked { get; set; }
+        private bool inputLocked;
+        private int frameEntradaLiberada = -1;
+
+        // Ignora também o frame de fechamento para o clique/Enter do menu não virar uma ação do jogo.
+        public bool InputLocked
+        {
+            get => inputLocked;
+            set
+            {
+                if (inputLocked && !value) frameEntradaLiberada = Time.frameCount;
+                inputLocked = value;
+            }
+        }
 
         // Interactions that should show Marcus's interact animation (e.g. lighting the campfire)
         // call this when they start. Signs don't, so reading one doesn't trigger it.
@@ -281,7 +292,7 @@ namespace HookPrototype
 
         private void Update()
         {
-            if (ReadRestartPressed())
+            if (!InputLocked && frameEntradaLiberada != Time.frameCount && ReadRestartPressed())
             {
                 RestartPrototype();
                 return;
@@ -303,7 +314,7 @@ namespace HookPrototype
                 return;
             }
 
-            if (InputLocked)
+            if (InputLocked || frameEntradaLiberada == Time.frameCount)
             {
                 moveInput = 0f;
                 previousHookHeld = ReadHookHeld();
@@ -1396,6 +1407,8 @@ namespace HookPrototype
 
         private void OnGUI()
         {
+            if (InputLocked) return;
+
             GUIStyle title = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 20,
@@ -1438,17 +1451,7 @@ namespace HookPrototype
         private static float ReadHorizontal()
         {
 #if ENABLE_INPUT_SYSTEM
-            float value = 0f;
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) value -= 1f;
-                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) value += 1f;
-            }
-            if (Gamepad.current != null && Mathf.Abs(Gamepad.current.leftStick.x.ReadValue()) > Mathf.Abs(value))
-            {
-                value = Gamepad.current.leftStick.x.ReadValue();
-            }
-            return Mathf.Clamp(value, -1f, 1f);
+            return ControlesJogo.Horizontal();
 #else
             return Input.GetAxisRaw("Horizontal");
 #endif
@@ -1457,17 +1460,7 @@ namespace HookPrototype
         private static float ReadVertical()
         {
 #if ENABLE_INPUT_SYSTEM
-            float value = 0f;
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) value -= 1f;
-                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) value += 1f;
-            }
-            if (Gamepad.current != null && Mathf.Abs(Gamepad.current.leftStick.y.ReadValue()) > Mathf.Abs(value))
-            {
-                value = Gamepad.current.leftStick.y.ReadValue();
-            }
-            return Mathf.Clamp(value, -1f, 1f);
+            return ControlesJogo.Vertical();
 #else
             return Input.GetAxisRaw("Vertical");
 #endif
@@ -1476,8 +1469,7 @@ namespace HookPrototype
         private static bool ReadInteractPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) ||
-                   (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+            return ControlesJogo.Interagir();
 #else
             return Input.GetKeyDown(KeyCode.E);
 #endif
@@ -1505,7 +1497,7 @@ namespace HookPrototype
         private static bool ReadHookHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Mouse.current != null && Mouse.current.leftButton.isPressed;
+            return ControlesJogo.Segurando(AcaoJogo.Gancho);
 #else
             return Input.GetMouseButton(0);
 #endif
@@ -1514,7 +1506,7 @@ namespace HookPrototype
         private static bool ReadJumpPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+            return ControlesJogo.Pressionou(AcaoJogo.Pular);
 #else
             return Input.GetKeyDown(KeyCode.Space);
 #endif
@@ -1523,7 +1515,7 @@ namespace HookPrototype
         private static bool ReadJumpHeld()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+            return ControlesJogo.Segurando(AcaoJogo.Pular);
 #else
             return Input.GetKey(KeyCode.Space);
 #endif
@@ -1532,7 +1524,7 @@ namespace HookPrototype
         private static bool ReadDashPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return (Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame) ||
+            return ControlesJogo.Pressionou(AcaoJogo.Dash) ||
                    (Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame);
 #else
             return Input.GetKeyDown(KeyCode.LeftShift);
@@ -1542,7 +1534,7 @@ namespace HookPrototype
         private static bool ReadRestartPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame;
+            return ControlesJogo.Pressionou(AcaoJogo.Reiniciar);
 #else
             return Input.GetKeyDown(KeyCode.R);
 #endif
