@@ -449,8 +449,8 @@ namespace HookPrototype
 
             if (hanging && jumpPressed)
             {
-                // Preso num ponto: pular solta a corda e impulsiona para cima, mantendo a velocidade do balanço.
-                float swingVelocityY = body.linearVelocity.y;
+                // Ao pular, preserva o impulso vertical do balanço quando ele é maior que o do pulo.
+                float swingVelocityY = currentTarget != null && currentTarget.StopsAtAnchor ? 0f : body.linearVelocity.y;
                 CancelHook(true);
                 Jump();
                 if (swingVelocityY > body.linearVelocity.y)
@@ -1080,7 +1080,11 @@ namespace HookPrototype
             CancelStep();
             body.gravityScale = 0f;
             dashTimer = 0f;
-            UseCableStyle();
+            if (!currentTarget.StopsAtAnchor)
+            {
+                UseCableStyle();
+            }
+
             aimLine.enabled = true;
             currentTarget.NotifyHooked();
             if (sons != null)
@@ -1107,7 +1111,15 @@ namespace HookPrototype
 
             if (hanging)
             {
-                Swing(targetPosition);
+                if (currentTarget.StopsAtAnchor)
+                {
+                    HoldAtAnchor(targetPosition);
+                }
+                else
+                {
+                    Swing(targetPosition);
+                }
+
                 return;
             }
 
@@ -1117,8 +1129,12 @@ namespace HookPrototype
             aimLine.SetPosition(0, body.position);
             aimLine.SetPosition(1, targetPosition);
 
-            // Num ponto de ancoragem o jogador para na distância da corda, não em cima do ponto.
-            float reachDistance = currentTarget.IsEnemy ? targetReachDistance : Mathf.Max(targetReachDistance, swingRopeLength);
+            float reachDistance = targetReachDistance;
+            if (!currentTarget.IsEnemy && !currentTarget.StopsAtAnchor)
+            {
+                reachDistance = Mathf.Max(reachDistance, swingRopeLength);
+            }
+
             if (distance <= reachDistance)
             {
                 ReachTarget();
@@ -1176,17 +1192,31 @@ namespace HookPrototype
                 pulling = true;
                 dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
+                Vector2 anchor = reachedTarget.transform.position;
+                if (reachedTarget.StopsAtAnchor)
+                {
+                    body.gravityScale = 0f;
+                    aimLine.enabled = false;
+                    HoldAtAnchor(anchor);
+                    return;
+                }
+
                 body.gravityScale = baseGravityScale;
                 aimLine.enabled = true;
 
                 // Começa a balançar: a velocidade do puxão não some, é desviada para a direção do balanço.
-                Vector2 anchor = reachedTarget.transform.position;
                 Vector2 toBody = body.position - anchor;
                 swingLength = Mathf.Clamp(toBody.magnitude, targetReachDistance, swingRopeLength);
                 Vector2 radial = toBody.sqrMagnitude > 0.0001f ? toBody.normalized : Vector2.down;
                 body.linearVelocity = SwingEntryVelocity(incomingVelocity, radial);
                 lastAnchorPosition = anchor;
             }
+        }
+
+        private void HoldAtAnchor(Vector2 anchor)
+        {
+            body.position = anchor;
+            body.linearVelocity = Vector2.zero;
         }
 
         // Mantém a intensidade da velocidade do puxão (até o máximo do balanço) e a gira para ficar
@@ -1241,6 +1271,7 @@ namespace HookPrototype
         private void ReleasePull()
         {
             bool wasHanging = hanging;
+            bool wasStoppedAtAnchor = wasHanging && currentTarget != null && currentTarget.StopsAtAnchor;
             Vector2 velocity = body.linearVelocity;
             Vector2 toTarget = currentTarget != null
                 ? (Vector2)currentTarget.transform.position - body.position
@@ -1249,7 +1280,11 @@ namespace HookPrototype
 
             if (wasHanging)
             {
-                // Soltar a corda balançando mantém a velocidade do balanço.
+                if (wasStoppedAtAnchor)
+                {
+                    body.linearVelocity = Vector2.zero;
+                }
+
                 return;
             }
 
