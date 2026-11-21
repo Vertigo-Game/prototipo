@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 1345979816197996150}
   - component: {fileID: 7665452503586262380}
   - component: {fileID: 5125552290776612103}
+  - component: {fileID: 5104713009}
   m_Layer: 0
   m_Name: InimigoMovel
   m_TagString: Untagged
@@ -258,3 +259,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b621e1a4a86427aa0729759fb35ff7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.AnimacaoInimigo
+--- !u!114 &5104713009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5104713001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78c2b4951b554290bb1c81df360e9f88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.TrilhoDoPonto
+  trilhoLigado: 0
+  corTrilho: {r: 0.5529412, g: 0.5568628, b: 0.56078434, a: 1}
+  corPixelAlternado: {r: 0.21176471, g: 0.21176471, b: 0.21176471, a: 1}
+  pixelsPorUnidade: 16
+  ordemRelativaAoPonto: -1
