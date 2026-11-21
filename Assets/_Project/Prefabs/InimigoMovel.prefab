@@ -16,8 +16,10 @@ GameObject:
   - component: {fileID: 5104713007}
   - component: {fileID: 5104713008}
   - component: {fileID: 1345979816197996150}
+  - component: {fileID: 7665452503586262380}
+  - component: {fileID: 5125552290776612103}
   m_Layer: 0
-  m_Name: Inimigo Movel
+  m_Name: InimigoMovel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +33,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5104713001}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.38268346, w: 0.9238795}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.72, y: 0.72, z: 1}
   m_ConstrainProportionsScale: 0
@@ -87,8 +89,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 8
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7649850835769860223, guid: 39cece5fa970a4b40a87eb51ca1bee0e, type: 2}
-  m_Color: {r: 1, g: 0.55, b: 0.12, a: 1}
+  m_Sprite: {fileID: 8763661180470768924, guid: 7d2cad06509ce8b41af41f0bbf06aaa8, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -218,6 +220,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b57aa8c456fa0a469754b238194b1a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.ContornoPerigo
-  cor: {r: 0.92, g: 0.16, b: 0.12, a: 1}
+  cor: {r: 1, g: 0.55, b: 0.12, a: 1}
   materialSilhueta: {fileID: 2100000, guid: e7f6468842073a545818fb7c972faa39, type: 2}
-  espessuraPixels: 1
+  espessuraPixels: 16
+  pixelsPorUnidade: 16
+--- !u!95 &7665452503586262380
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5104713001}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 05503b064ab77e744aad3fde7bb4dc3a, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5125552290776612103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5104713001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b621e1a4a86427aa0729759fb35ff7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.AnimacaoInimigo

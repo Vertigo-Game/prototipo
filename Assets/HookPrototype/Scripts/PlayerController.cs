@@ -1074,10 +1074,17 @@ namespace HookPrototype
                 aimLine.enabled = false;
                 body.gravityScale = baseGravityScale;
                 dashAvailable = true;
-                float steering = Mathf.Abs(moveInput) > 0.1f ? moveInput : Mathf.Sign(incomingVelocity.x);
-                body.linearVelocity = new Vector2(
-                    incomingVelocity.x * 0.32f + steering * 3.75f,
-                    enemyBounceSpeed + Mathf.Max(0f, incomingVelocity.y * 0.18f));
+                float customVerticalSpeed = reachedTarget.VerticalCaptureBounceSpeed;
+                float horizontalSpeed = 0f;
+                if (customVerticalSpeed <= 0f || reachedTarget.KeepHorizontalCaptureBounce)
+                {
+                    float steering = Mathf.Abs(moveInput) > 0.1f ? moveInput : Mathf.Sign(incomingVelocity.x);
+                    horizontalSpeed = incomingVelocity.x * 0.32f + steering * 3.75f;
+                }
+                float verticalSpeed = customVerticalSpeed > 0f
+                    ? customVerticalSpeed
+                    : enemyBounceSpeed + Mathf.Max(0f, incomingVelocity.y * 0.18f);
+                body.linearVelocity = new Vector2(horizontalSpeed, verticalSpeed);
                 if (sons != null)
                 {
                     sons.TocarSoltura();
