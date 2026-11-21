@@ -15513,6 +15513,10 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
+      propertyPath: definirPorAngulo
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
       propertyPath: pontos.Array.data[0].x
       value: -0.5
       objectReference: {fileID: 0}
@@ -16761,6 +16765,10 @@ PrefabInstance:
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
       propertyPath: velocidade
       value: 6.79
+      objectReference: {fileID: 0}
+    - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
+      propertyPath: definirPorAngulo
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
       propertyPath: pontos.Array.data[0].x

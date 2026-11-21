@@ -21925,6 +21925,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
+      propertyPath: definirPorAngulo
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
       propertyPath: pontos.Array.size
       value: 2
       objectReference: {fileID: 0}
@@ -23052,6 +23056,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
       propertyPath: progressoInicial
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}
+      propertyPath: definirPorAngulo
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5104713007, guid: 714defb18b984c97b8cc11de768941ee, type: 3}

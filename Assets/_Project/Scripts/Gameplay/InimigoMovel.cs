@@ -20,13 +20,14 @@ namespace Vertigo.Gameplay
         [Header("Rota por ângulo (mais simples para uma reta)")]
         [SerializeField, Tooltip("Ligado: a rota é uma reta definida por ângulo e comprimento, centrada no objeto. A lista de pontos abaixo é ignorada.")]
         private bool definirPorAngulo;
-        [SerializeField, Tooltip("Direção da reta em graus: 0 = horizontal, 90 = vertical, 45 = diagonal para cima à direita.")]
+        [SerializeField, Tooltip("Só vale com Definir Por Angulo ligado. Direção da reta em graus: 0 = horizontal, 90 = vertical, 45 = diagonal para cima à direita.")]
         private float angulo;
-        [SerializeField, Min(0f), Tooltip("Comprimento total da reta, de uma ponta à outra.")]
+        [SerializeField, Min(0f), Tooltip("Só vale com Definir Por Angulo ligado. Comprimento total da reta, de uma ponta à outra.")]
         private float comprimento = 4f;
 
         [Header("Rota por pontos (relativos à posição do objeto na cena)")]
-        [SerializeField] private Vector2[] pontos = { new Vector2(-2f, 0f), new Vector2(2f, 0f) };
+        [SerializeField, Tooltip("Só vale com Definir Por Angulo desligado.")]
+        private Vector2[] pontos = { new Vector2(-2f, 0f), new Vector2(2f, 0f) };
         [SerializeField, Tooltip("Desligado: vai e volta. Ligado: do último ponto segue para o primeiro.")]
         private bool emLoop;
 
