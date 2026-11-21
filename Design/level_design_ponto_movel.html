@@ -5,17 +5,17 @@ main{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
 h1{font-size:26px;margin:0 0 4px} h2{font-size:20px;margin:0 0 4px} h3{font-size:14px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;color:#5A626E}
 section{background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:18px;margin:18px 0}
 .obj{margin:0 0 12px;color:#3A4250} .mapa{overflow-x:auto} .mapa svg{max-width:100%;height:auto}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px} ul{margin:0;padding-left:18px} li{margin:3px 0}
+.bloco{font-size:22px;margin:36px 0 0;padding-top:10px;border-top:2px solid #D5DAE1} .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px} ul{margin:0;padding-left:18px} li{margin:3px 0}
 .box{background:#FFF9DB;border:1px solid #E9D58A;border-radius:10px;padding:12px 16px} .sw{display:inline-flex;align-items:center;margin:4px 14px 4px 0;font-size:13px}
 .sw i{width:14px;height:14px;border:1px solid #8A94A6;margin-right:6px;display:inline-block} .seq{font-weight:600;margin:10px 0}
 @media(max-width:700px){.cols{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>Introdução do ponto móvel</h1><p>Trechos para montar no Unity. Cada quadrado é 1 tile; as linhas mais fortes marcam de 5 em 5.</p>
-<p class="seq">Passo 1 → Passo 2 → 🔥 → Passo 3 → Passo 4a → Passo 4b → 🔥 → Passo 4c → Passo 4d → 🔥 → Passo 5</p>
+<p class="seq">Passo 1 → Passo 2 → 🔥 → Passo 3 → Passo 4a → Passo 4b → 🔥 → Passo 4c → Passo 4d → 🔥 → Passo 5 → Passo 6 → Passo 7 → 🔥 → Passo 8 → 🔥 → Passo 9 → 🔥 → Passo 10 → 🔥</p>
 <div class="box"><b>Números do jogo usados nos desenhos</b><br>
-Pulo sobe 2,4 · pulo + dash alcança ~7,6 na mesma altura · gancho alcança 5 · pendurado, o jogador fica 2,5 abaixo do ponto · quique no inimigo sobe ~4,6 · degrau automático de 1 · tela ~18 × 10.<br>
+Pulo sobe 2,4 · pulo + dash alcança ~7,6 na mesma altura · gancho alcança 5 · pendurado, o jogador fica 2,5 abaixo do ponto · na pedra fixa o jogador fica parado, preso pelas mãos (0,5 acima do centro), e sai com pulo ou dash · quique no inimigo sobe ~4,6 · degrau automático de 1 · tela ~18 × 10.<br>
 Coordenadas locais: (0; 0) é o canto de baixo à esquerda de cada desenho; some à origem do trecho na cena.</div>
-<p><span class="sw"><i style="background:#6B6577"></i>rocha</span><span class="sw"><i style="background:#F7FAFD"></i>neve</span><span class="sw"><i style="background:#D9483B"></i>espinho</span><span class="sw"><i style="background:#F2C94C"></i>ponto móvel</span><span class="sw"><i style="background:#8D8E8F"></i>trilho</span><span class="sw"><i style="background:#E39B2D"></i>pedra fixa</span><span class="sw"><i style="background:#F28C28"></i>inimigo</span><span class="sw"><i style="background:#FF7A1A"></i>fogueira</span><span class="sw"><i style="background:#3D6FD6"></i>jogador</span><span class="sw"><i style="background:#E8590C"></i>caminho</span></p>
+<p><span class="sw"><i style="background:#6B6577"></i>rocha</span><span class="sw"><i style="background:#F7FAFD"></i>neve</span><span class="sw"><i style="background:#D9483B"></i>espinho</span><span class="sw"><i style="background:#F2C94C"></i>ponto móvel</span><span class="sw"><i style="background:#8D8E8F"></i>trilho</span><span class="sw"><i style="background:#E39B2D"></i>pedra fixa</span><span class="sw"><i style="background:#F28C28"></i>inimigo</span><span class="sw"><i style="background:#FF7A1A"></i>fogueira</span><span class="sw"><i style="background:#3D6FD6"></i>jogador</span><span class="sw"><i style="background:#B5651D"></i>corda</span><span class="sw"><i style="background:#E8590C"></i>caminho</span></p>
 <section><h2>Passo 1 — Apresentação</h2><p class="obj">Mostrar que o ponto anda e que o trilho diz para onde. Sem risco: cair só faz voltar pelo degrau.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 340" width="660" height="340" font-family="Inter, Segoe UI, sans-serif">
 <defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
 <rect x="30" y="30" width="600" height="280" fill="#DCE6F1"/>
@@ -425,12 +425,12 @@ Coordenadas locais: (0; 0) é o canto de baixo à esquerda de cada desenho; some
 <text x="239.0" y="254.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">carona</text>
 <polyline points="358.0,250.0 402.0,200.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
 <text x="384.0" y="219.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">solta e mira no ar</text>
-<polyline points="420.0,244.0 460.0,206.0 510.0,234.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
-<text x="464.0" y="200.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">balança e pula</text>
+<polyline points="418.0,206.0 460.0,178.0 510.0,234.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="464.0" y="172.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pula ou dash</text>
 <line x1="490" y1="340.0" x2="150" y2="340.0" stroke="#4B5563" stroke-width="1.3" marker-start="url(#ponta)" marker-end="url(#ponta)"/>
 <text x="324.0" y="336.0" font-size="11" fill="#4B5563" paint-order="stroke" stroke="#fff" stroke-width="3">17</text>
 <text x="382.0" y="166.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
-</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 4 (0–5), vão com espinhos (6–22), chegada chão 7 (23–35).</li><li>A pedra fixa (19; 10) só fica a menos de 5 quando o ponto móvel está na ponta direita.</li><li>Do início ela está a 15: não dá para pular etapa.</li><li>Para trocar de alvo: apertar o gancho solta, apertar de novo no ar mira (o tempo desacelera).</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel (prefab PontoMovel) em (10; 9): Definir Por Angulo ligado, ângulo 0, comprimento 12, velocidade 2,5, pausa 1.</li><li>Pedra fixa (prefab FixedHookPoint) em (19; 10).</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 4b — Soltar do balanço e dar dash</h2><p class="obj">Combinar com o dash: o trilho acaba cedo e só soltando no alto do balanço + dash dá para chegar.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 380" width="740" height="380" font-family="Inter, Segoe UI, sans-serif">
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 4 (0–5), vão com espinhos (6–22), chegada chão 7 (23–35).</li><li>A pedra fixa (19; 10) só fica a menos de 5 quando o ponto móvel está na ponta direita.</li><li>Do início ela está a 15: não dá para pular etapa.</li><li>Para trocar de alvo: apertar o gancho solta, apertar de novo no ar mira (o tempo desacelera).</li><li>Na pedra o jogador fica parado, preso pelas mãos; sai com pulo ou dash para a chegada.</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel (prefab PontoMovel) em (10; 9): Definir Por Angulo ligado, ângulo 0, comprimento 12, velocidade 2,5, pausa 1.</li><li>Pedra fixa (prefab FixedHookPoint) em (19; 10).</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 4b — Soltar do balanço e dar dash</h2><p class="obj">Combinar com o dash: o trilho acaba cedo e só soltando no alto do balanço + dash dá para chegar.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 380" width="740" height="380" font-family="Inter, Segoe UI, sans-serif">
 <defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
 <rect x="30" y="30" width="680" height="320" fill="#DCE6F1"/>
 <line x1="30" y1="30" x2="30" y2="350" stroke="#A9B9CC" stroke-width="1"/>
@@ -903,5 +903,695 @@ Coordenadas locais: (0; 0) é o canto de baixo à esquerda de cada desenho; some
 <text x="90" y="410" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">espinhos</text>
 <text x="374.0" y="137.99999999999997" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">espinhos</text>
 <text x="404.0" y="398.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
-</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Chão 2 com fogueira (cair na chaminé só faz recomeçar a subida), paredes com espinhos nas faces de dentro.</li><li>A (45°) leva até a ponta de cima, onde a pedra fixa (18; 12,5) entra no alcance (4,5).</li><li>Da pedra, B (135°) só fica ao alcance (4,5) quando está embaixo; B começa no meio da rota (progresso 0,5) para não andar junto com A.</li><li>Balançar forte na pedra para a direita encosta nos espinhos: o jogador precisa de controle.</li><li>No alto de B o inimigo móvel passa 4 acima: enganchar e quicar segurando ← para cair na saída (chão 25).</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel A (prefab PontoMovel) em (10,25; 9,25): Definir Por Angulo ligado, ângulo 45, comprimento 10,61, velocidade 3, pausa 0,5.</li><li>PontoMovel B (prefab PontoMovel) em (13; 17): Definir Por Angulo ligado, ângulo 135, comprimento 8,49, velocidade 3, pausa 0,5, progresso inicial 0,5.</li><li>Pedra fixa (prefab FixedHookPoint) em (18; 12,5).</li><li>Inimigo móvel (prefab InimigoMovel) em (12; 21,5): por ângulo, ângulo 0, comprimento 6, velocidade 2, trilho desligado.</li><li>Fogueira (checkpoint) no chão em x 18.</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Chão 2 com fogueira (cair na chaminé só faz recomeçar a subida), paredes com espinhos nas faces de dentro.</li><li>A (45°) leva até a ponta de cima, onde a pedra fixa (18; 12,5) entra no alcance (4,5).</li><li>Da pedra, B (135°) só fica ao alcance (4,5) quando está embaixo; B começa no meio da rota (progresso 0,5) para não andar junto com A.</li><li>Na pedra o jogador fica parado, preso pelas mãos: dá para esperar B com calma antes de seguir.</li><li>No alto de B o inimigo móvel passa 4 acima: enganchar e quicar segurando ← para cair na saída (chão 25).</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel A (prefab PontoMovel) em (10,25; 9,25): Definir Por Angulo ligado, ângulo 45, comprimento 10,61, velocidade 3, pausa 0,5.</li><li>PontoMovel B (prefab PontoMovel) em (13; 17): Definir Por Angulo ligado, ângulo 135, comprimento 8,49, velocidade 3, pausa 0,5, progresso inicial 0,5.</li><li>Pedra fixa (prefab FixedHookPoint) em (18; 12,5).</li><li>Inimigo móvel (prefab InimigoMovel) em (12; 21,5): por ângulo, ângulo 0, comprimento 6, velocidade 2, trilho desligado.</li><li>Fogueira (checkpoint) no chão em x 18.</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><h2 class="bloco">Bloco 2 — misturando tudo</h2><section><h2>Passo 6 — Subir a corda para pegar a carona</h2><p class="obj">Corda + ponto móvel: o ponto só fica ao alcance do alto da corda. Subir na hora certa e pegar a carona sobre os espinhos.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 460" width="740" height="460" font-family="Inter, Segoe UI, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
+<rect x="30" y="30" width="680" height="400" fill="#DCE6F1"/>
+<line x1="30" y1="30" x2="30" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="30" y="446" font-size="11" fill="#4B5563" text-anchor="middle">0</text>
+<line x1="50" y1="30" x2="50" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="70" y1="30" x2="70" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="90" y1="30" x2="90" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="110" y1="30" x2="110" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="130" y1="30" x2="130" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="130" y="446" font-size="11" fill="#4B5563" text-anchor="middle">5</text>
+<line x1="150" y1="30" x2="150" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="170" y1="30" x2="170" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="190" y1="30" x2="190" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="210" y1="30" x2="210" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="230" y1="30" x2="230" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="230" y="446" font-size="11" fill="#4B5563" text-anchor="middle">10</text>
+<line x1="250" y1="30" x2="250" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="270" y1="30" x2="270" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="290" y1="30" x2="290" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="310" y1="30" x2="310" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="330" y1="30" x2="330" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="330" y="446" font-size="11" fill="#4B5563" text-anchor="middle">15</text>
+<line x1="350" y1="30" x2="350" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="370" y1="30" x2="370" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="390" y1="30" x2="390" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="410" y1="30" x2="410" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="430" y1="30" x2="430" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="430" y="446" font-size="11" fill="#4B5563" text-anchor="middle">20</text>
+<line x1="450" y1="30" x2="450" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="470" y1="30" x2="470" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="490" y1="30" x2="490" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="510" y1="30" x2="510" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="530" y1="30" x2="530" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="530" y="446" font-size="11" fill="#4B5563" text-anchor="middle">25</text>
+<line x1="550" y1="30" x2="550" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="570" y1="30" x2="570" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="590" y1="30" x2="590" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="610" y1="30" x2="610" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="630" y1="30" x2="630" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="630" y="446" font-size="11" fill="#4B5563" text-anchor="middle">30</text>
+<line x1="650" y1="30" x2="650" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="670" y1="30" x2="670" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="690" y1="30" x2="690" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="710" y1="30" x2="710" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="430" x2="710" y2="430" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="434" font-size="11" fill="#4B5563" text-anchor="end">0</text>
+<line x1="30" y1="410" x2="710" y2="410" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="390" x2="710" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="370" x2="710" y2="370" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="350" x2="710" y2="350" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="330" x2="710" y2="330" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="334" font-size="11" fill="#4B5563" text-anchor="end">5</text>
+<line x1="30" y1="310" x2="710" y2="310" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="290" x2="710" y2="290" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="270" x2="710" y2="270" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="250" x2="710" y2="250" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="230" x2="710" y2="230" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="234" font-size="11" fill="#4B5563" text-anchor="end">10</text>
+<line x1="30" y1="210" x2="710" y2="210" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="190" x2="710" y2="190" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="170" x2="710" y2="170" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="150" x2="710" y2="150" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="130" x2="710" y2="130" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="134" font-size="11" fill="#4B5563" text-anchor="end">15</text>
+<line x1="30" y1="110" x2="710" y2="110" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="90" x2="710" y2="90" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="70" x2="710" y2="70" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="50" x2="710" y2="50" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="30" x2="710" y2="30" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="34" font-size="11" fill="#4B5563" text-anchor="end">20</text>
+<rect x="30" y="390" width="680" height="40" fill="#6B6577"/>
+<rect x="90" y="130" width="80" height="40" fill="#6B6577"/>
+<rect x="590" y="170" width="120" height="220" fill="#6B6577"/>
+<rect x="30" y="390" width="560" height="5" fill="#F7FAFD"/>
+<rect x="590" y="170" width="120" height="5" fill="#F7FAFD"/>
+<rect x="90" y="130" width="80" height="5" fill="#F7FAFD"/>
+<polygon points="210.0,390.0 230.0,390.0 220.0,377.0" fill="#D9483B"/>
+<polygon points="230.0,390.0 250.0,390.0 240.0,377.0" fill="#D9483B"/>
+<polygon points="250.0,390.0 270.0,390.0 260.0,377.0" fill="#D9483B"/>
+<polygon points="270.0,390.0 290.0,390.0 280.0,377.0" fill="#D9483B"/>
+<polygon points="290.0,390.0 310.0,390.0 300.0,377.0" fill="#D9483B"/>
+<polygon points="310.0,390.0 330.0,390.0 320.0,377.0" fill="#D9483B"/>
+<polygon points="330.0,390.0 350.0,390.0 340.0,377.0" fill="#D9483B"/>
+<polygon points="350.0,390.0 370.0,390.0 360.0,377.0" fill="#D9483B"/>
+<polygon points="370.0,390.0 390.0,390.0 380.0,377.0" fill="#D9483B"/>
+<polygon points="390.0,390.0 410.0,390.0 400.0,377.0" fill="#D9483B"/>
+<polygon points="410.0,390.0 430.0,390.0 420.0,377.0" fill="#D9483B"/>
+<polygon points="430.0,390.0 450.0,390.0 440.0,377.0" fill="#D9483B"/>
+<polygon points="450.0,390.0 470.0,390.0 460.0,377.0" fill="#D9483B"/>
+<polygon points="470.0,390.0 490.0,390.0 480.0,377.0" fill="#D9483B"/>
+<polygon points="490.0,390.0 510.0,390.0 500.0,377.0" fill="#D9483B"/>
+<polygon points="510.0,390.0 530.0,390.0 520.0,377.0" fill="#D9483B"/>
+<polygon points="530.0,390.0 550.0,390.0 540.0,377.0" fill="#D9483B"/>
+<polygon points="550.0,390.0 570.0,390.0 560.0,377.0" fill="#D9483B"/>
+<polygon points="570.0,390.0 590.0,390.0 580.0,377.0" fill="#D9483B"/>
+<circle cx="140.0" cy="176.0" r="100.0" fill="none" stroke="#3D6FD6" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>
+<text x="72.0" y="108.00000000000004" font-size="11" fill="#3D6FD6" paint-order="stroke" stroke="#fff" stroke-width="3">alcance 5 (alto da corda)</text>
+<line x1="140.0" y1="170" x2="140.0" y2="370" stroke="#B5651D" stroke-width="4"/>
+<line x1="136.0" y1="360.0" x2="144.0" y2="360.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="340.0" x2="144.0" y2="340.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="320.0" x2="144.0" y2="320.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="300.0" x2="144.0" y2="300.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="280.0" x2="144.0" y2="280.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="260.0" x2="144.0" y2="260.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="240.0" x2="144.0" y2="240.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="220.0" x2="144.0" y2="220.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="200.0" x2="144.0" y2="200.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="136.0" y1="180.0" x2="144.0" y2="180.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="180.0" y1="100.0" x2="540.0" y2="100.0" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="180.0" cy="100.0" r="3" fill="#363636"/>
+<circle cx="540.0" cy="100.0" r="3" fill="#363636"/>
+<circle cx="180.0" cy="100.0" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="320.0" y="91.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel · v 2,5</text>
+<rect x="63.0" y="362.0" width="14.0" height="28.0" rx="3" fill="#3D6FD6"/>
+<polyline points="82.0,362.0 130.0,342.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="110.0" y="346.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">agarra</text>
+<polyline points="152.0,338.0 152.0,190.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="156.0" y="258.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">sobe</text>
+<polyline points="146.0,166.0 174.0,114.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="164.0" y="134.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">gancho</text>
+<polyline points="200.0,150.0 530.0,150.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="369.0" y="144.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">carona</text>
+<polyline points="542.0,146.0 574.0,118.0 610.0,154.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="578.0" y="112.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">solta</text>
+<text x="36.0" y="57.99999999999997" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">corda presa na laje</text>
+<text x="310" y="358.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">espinhos</text>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Chão 2 (0–33) com espinhos de 9 a 27; laje no alto (3–6, 13–14) segurando a corda; chegada chão 13 (28–33).</li><li>Do alto da corda o ponto está a 4,3; de baixo da corda, a 13: precisa subir.</li><li>Sem a corda não há como chegar: o ponto passa a 14 do chão.</li><li>Pendurado, o jogador fica a 14 (pés a 13,3) e passa por cima da chegada (13).</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel (prefab PontoMovel) em (16,5; 16,5): Definir Por Angulo ligado, ângulo 0, comprimento 18, velocidade 2,5, pausa 1.</li><li>Corda no tilemap rope_climb, coluna x 5, de y 3 a 12 (o tilemap precisa do componente Corda).</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 7 — Esperar na pedra o inimigo chegar</h2><p class="obj">Pedra fixa como lugar de espera: pendurado parado, o jogador espera o inimigo móvel vir até o alcance e quica nele até a borda alta.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 420" width="740" height="420" font-family="Inter, Segoe UI, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
+<rect x="30" y="30" width="680" height="360" fill="#DCE6F1"/>
+<line x1="30" y1="30" x2="30" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="30" y="406" font-size="11" fill="#4B5563" text-anchor="middle">0</text>
+<line x1="50" y1="30" x2="50" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="70" y1="30" x2="70" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="90" y1="30" x2="90" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="110" y1="30" x2="110" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="130" y1="30" x2="130" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="130" y="406" font-size="11" fill="#4B5563" text-anchor="middle">5</text>
+<line x1="150" y1="30" x2="150" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="170" y1="30" x2="170" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="190" y1="30" x2="190" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="210" y1="30" x2="210" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="230" y1="30" x2="230" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="230" y="406" font-size="11" fill="#4B5563" text-anchor="middle">10</text>
+<line x1="250" y1="30" x2="250" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="270" y1="30" x2="270" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="290" y1="30" x2="290" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="310" y1="30" x2="310" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="330" y1="30" x2="330" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="330" y="406" font-size="11" fill="#4B5563" text-anchor="middle">15</text>
+<line x1="350" y1="30" x2="350" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="370" y1="30" x2="370" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="390" y1="30" x2="390" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="410" y1="30" x2="410" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="430" y1="30" x2="430" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="430" y="406" font-size="11" fill="#4B5563" text-anchor="middle">20</text>
+<line x1="450" y1="30" x2="450" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="470" y1="30" x2="470" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="490" y1="30" x2="490" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="510" y1="30" x2="510" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="530" y1="30" x2="530" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="530" y="406" font-size="11" fill="#4B5563" text-anchor="middle">25</text>
+<line x1="550" y1="30" x2="550" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="570" y1="30" x2="570" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="590" y1="30" x2="590" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="610" y1="30" x2="610" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="630" y1="30" x2="630" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="630" y="406" font-size="11" fill="#4B5563" text-anchor="middle">30</text>
+<line x1="650" y1="30" x2="650" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="670" y1="30" x2="670" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="690" y1="30" x2="690" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="710" y1="30" x2="710" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="390" x2="710" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="394" font-size="11" fill="#4B5563" text-anchor="end">0</text>
+<line x1="30" y1="370" x2="710" y2="370" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="350" x2="710" y2="350" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="330" x2="710" y2="330" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="310" x2="710" y2="310" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="290" x2="710" y2="290" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="294" font-size="11" fill="#4B5563" text-anchor="end">5</text>
+<line x1="30" y1="270" x2="710" y2="270" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="250" x2="710" y2="250" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="230" x2="710" y2="230" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="210" x2="710" y2="210" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="190" x2="710" y2="190" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="194" font-size="11" fill="#4B5563" text-anchor="end">10</text>
+<line x1="30" y1="170" x2="710" y2="170" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="150" x2="710" y2="150" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="130" x2="710" y2="130" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="110" x2="710" y2="110" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="90" x2="710" y2="90" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="94" font-size="11" fill="#4B5563" text-anchor="end">15</text>
+<line x1="30" y1="70" x2="710" y2="70" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="50" x2="710" y2="50" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="30" x2="710" y2="30" stroke="#C9D5E3" stroke-width="0.5"/>
+<rect x="30" y="310" width="120" height="80" fill="#6B6577"/>
+<rect x="150" y="370" width="260" height="20" fill="#6B6577"/>
+<rect x="410" y="110" width="300" height="280" fill="#6B6577"/>
+<rect x="150" y="370" width="260" height="5" fill="#F7FAFD"/>
+<rect x="30" y="310" width="120" height="5" fill="#F7FAFD"/>
+<rect x="410" y="110" width="300" height="5" fill="#F7FAFD"/>
+<polygon points="150.0,370.0 170.0,370.0 160.0,357.0" fill="#D9483B"/>
+<polygon points="170.0,370.0 190.0,370.0 180.0,357.0" fill="#D9483B"/>
+<polygon points="190.0,370.0 210.0,370.0 200.0,357.0" fill="#D9483B"/>
+<polygon points="210.0,370.0 230.0,370.0 220.0,357.0" fill="#D9483B"/>
+<polygon points="230.0,370.0 250.0,370.0 240.0,357.0" fill="#D9483B"/>
+<polygon points="250.0,370.0 270.0,370.0 260.0,357.0" fill="#D9483B"/>
+<polygon points="270.0,370.0 290.0,370.0 280.0,357.0" fill="#D9483B"/>
+<polygon points="290.0,370.0 310.0,370.0 300.0,357.0" fill="#D9483B"/>
+<polygon points="310.0,370.0 330.0,370.0 320.0,357.0" fill="#D9483B"/>
+<polygon points="330.0,370.0 350.0,370.0 340.0,357.0" fill="#D9483B"/>
+<polygon points="350.0,370.0 370.0,370.0 360.0,357.0" fill="#D9483B"/>
+<polygon points="370.0,370.0 390.0,370.0 380.0,357.0" fill="#D9483B"/>
+<polygon points="390.0,370.0 410.0,370.0 400.0,357.0" fill="#D9483B"/>
+<circle cx="200.0" cy="230" r="100.0" fill="none" stroke="#3D6FD6" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>
+<text x="132.0" y="162.0" font-size="11" fill="#3D6FD6" paint-order="stroke" stroke="#fff" stroke-width="3">alcance 5 (na pedra)</text>
+<line x1="270" y1="170" x2="370" y2="170" stroke="#FF5A8C" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="320.0" cy="170.0" r="8.0" fill="#F28C28" stroke="#D62828" stroke-width="3"/>
+<circle cx="200.0" cy="220.0" r="7.6" fill="#E39B2D" stroke="#6b4e16" stroke-width="2"/>
+<polygon points="622,110 638,110 630,92" fill="#FF7A1A"/>
+<rect x="103.0" y="282.0" width="14.0" height="28.0" rx="3" fill="#3D6FD6"/>
+<polyline points="130.0,286.0 192.0,230.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="165.0" y="252.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pedra</text>
+<polyline points="210.0,222.0 264.0,180.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="241.0" y="195.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">espera o inimigo</text>
+<polyline points="278.0,158.0 320.0,78.0 422.0,98.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="324.0" y="72.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">quique + dash →</text>
+<line x1="270" y1="270" x2="410" y2="270" stroke="#4B5563" stroke-width="1.3" marker-start="url(#ponta)" marker-end="url(#ponta)"/>
+<text x="344.0" y="266.0" font-size="11" fill="#4B5563" paint-order="stroke" stroke="#fff" stroke-width="3">7</text>
+<text x="300.0" y="146.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">inimigo móvel</text>
+<text x="174.0" y="196.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
+<text x="590" y="78.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">fogueira</text>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 4 (0–5), poço com espinhos (6–18), borda alta chão 14 (19–33).</li><li>Da beirada só a pedra fixa (8,5; 8,5) está ao alcance (4,9). Nela o jogador fica parado, sem gastar nada.</li><li>O inimigo anda de 12 a 17: só fica ao alcance da pedra (4,6) na ponta esquerda.</li><li>O quique leva o jogador a ~14,9 (pés) e a ~5 para a direita; o dash completa até a borda (7 do inimigo).</li></ul></div><div><h3>Montagem</h3><ul><li>Pedra fixa (prefab FixedHookPoint) em (8,5; 8,5).</li><li>Inimigo móvel (prefab InimigoMovel) em (14,5; 11): por ângulo, ângulo 0, comprimento 5, velocidade 2, trilho desligado.</li><li>Fogueira (checkpoint) no chão em x 30.</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 8 — Corredor de pontos</h2><p class="obj">Três pontos móveis em direções diferentes (horizontal, vertical e diagonal) com uma pedra fixa no meio para respirar.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 580" width="940" height="580" font-family="Inter, Segoe UI, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
+<rect x="30" y="30" width="880" height="520" fill="#DCE6F1"/>
+<line x1="30" y1="30" x2="30" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="30" y="566" font-size="11" fill="#4B5563" text-anchor="middle">0</text>
+<line x1="50" y1="30" x2="50" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="70" y1="30" x2="70" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="90" y1="30" x2="90" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="110" y1="30" x2="110" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="130" y1="30" x2="130" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="130" y="566" font-size="11" fill="#4B5563" text-anchor="middle">5</text>
+<line x1="150" y1="30" x2="150" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="170" y1="30" x2="170" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="190" y1="30" x2="190" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="210" y1="30" x2="210" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="230" y1="30" x2="230" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="230" y="566" font-size="11" fill="#4B5563" text-anchor="middle">10</text>
+<line x1="250" y1="30" x2="250" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="270" y1="30" x2="270" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="290" y1="30" x2="290" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="310" y1="30" x2="310" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="330" y1="30" x2="330" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="330" y="566" font-size="11" fill="#4B5563" text-anchor="middle">15</text>
+<line x1="350" y1="30" x2="350" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="370" y1="30" x2="370" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="390" y1="30" x2="390" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="410" y1="30" x2="410" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="430" y1="30" x2="430" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="430" y="566" font-size="11" fill="#4B5563" text-anchor="middle">20</text>
+<line x1="450" y1="30" x2="450" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="470" y1="30" x2="470" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="490" y1="30" x2="490" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="510" y1="30" x2="510" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="530" y1="30" x2="530" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="530" y="566" font-size="11" fill="#4B5563" text-anchor="middle">25</text>
+<line x1="550" y1="30" x2="550" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="570" y1="30" x2="570" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="590" y1="30" x2="590" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="610" y1="30" x2="610" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="630" y1="30" x2="630" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="630" y="566" font-size="11" fill="#4B5563" text-anchor="middle">30</text>
+<line x1="650" y1="30" x2="650" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="670" y1="30" x2="670" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="690" y1="30" x2="690" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="710" y1="30" x2="710" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="730" y1="30" x2="730" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="730" y="566" font-size="11" fill="#4B5563" text-anchor="middle">35</text>
+<line x1="750" y1="30" x2="750" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="770" y1="30" x2="770" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="790" y1="30" x2="790" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="810" y1="30" x2="810" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="830" y1="30" x2="830" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="830" y="566" font-size="11" fill="#4B5563" text-anchor="middle">40</text>
+<line x1="850" y1="30" x2="850" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="870" y1="30" x2="870" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="890" y1="30" x2="890" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="910" y1="30" x2="910" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="550" x2="910" y2="550" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="554" font-size="11" fill="#4B5563" text-anchor="end">0</text>
+<line x1="30" y1="530" x2="910" y2="530" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="510" x2="910" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="490" x2="910" y2="490" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="470" x2="910" y2="470" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="450" x2="910" y2="450" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="454" font-size="11" fill="#4B5563" text-anchor="end">5</text>
+<line x1="30" y1="430" x2="910" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="410" x2="910" y2="410" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="390" x2="910" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="370" x2="910" y2="370" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="350" x2="910" y2="350" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="354" font-size="11" fill="#4B5563" text-anchor="end">10</text>
+<line x1="30" y1="330" x2="910" y2="330" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="310" x2="910" y2="310" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="290" x2="910" y2="290" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="270" x2="910" y2="270" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="250" x2="910" y2="250" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="254" font-size="11" fill="#4B5563" text-anchor="end">15</text>
+<line x1="30" y1="230" x2="910" y2="230" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="210" x2="910" y2="210" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="190" x2="910" y2="190" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="170" x2="910" y2="170" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="150" x2="910" y2="150" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="154" font-size="11" fill="#4B5563" text-anchor="end">20</text>
+<line x1="30" y1="130" x2="910" y2="130" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="110" x2="910" y2="110" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="90" x2="910" y2="90" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="70" x2="910" y2="70" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="50" x2="910" y2="50" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="54" font-size="11" fill="#4B5563" text-anchor="end">25</text>
+<line x1="30" y1="30" x2="910" y2="30" stroke="#C9D5E3" stroke-width="0.5"/>
+<rect x="30" y="390" width="100" height="160" fill="#6B6577"/>
+<rect x="130" y="530" width="660" height="20" fill="#6B6577"/>
+<rect x="790" y="190" width="120" height="360" fill="#6B6577"/>
+<rect x="130" y="530" width="660" height="5" fill="#F7FAFD"/>
+<rect x="30" y="390" width="100" height="5" fill="#F7FAFD"/>
+<rect x="790" y="190" width="120" height="5" fill="#F7FAFD"/>
+<polygon points="130.0,530.0 150.0,530.0 140.0,517.0" fill="#D9483B"/>
+<polygon points="150.0,530.0 170.0,530.0 160.0,517.0" fill="#D9483B"/>
+<polygon points="170.0,530.0 190.0,530.0 180.0,517.0" fill="#D9483B"/>
+<polygon points="190.0,530.0 210.0,530.0 200.0,517.0" fill="#D9483B"/>
+<polygon points="210.0,530.0 230.0,530.0 220.0,517.0" fill="#D9483B"/>
+<polygon points="230.0,530.0 250.0,530.0 240.0,517.0" fill="#D9483B"/>
+<polygon points="250.0,530.0 270.0,530.0 260.0,517.0" fill="#D9483B"/>
+<polygon points="270.0,530.0 290.0,530.0 280.0,517.0" fill="#D9483B"/>
+<polygon points="290.0,530.0 310.0,530.0 300.0,517.0" fill="#D9483B"/>
+<polygon points="310.0,530.0 330.0,530.0 320.0,517.0" fill="#D9483B"/>
+<polygon points="330.0,530.0 350.0,530.0 340.0,517.0" fill="#D9483B"/>
+<polygon points="350.0,530.0 370.0,530.0 360.0,517.0" fill="#D9483B"/>
+<polygon points="370.0,530.0 390.0,530.0 380.0,517.0" fill="#D9483B"/>
+<polygon points="390.0,530.0 410.0,530.0 400.0,517.0" fill="#D9483B"/>
+<polygon points="410.0,530.0 430.0,530.0 420.0,517.0" fill="#D9483B"/>
+<polygon points="430.0,530.0 450.0,530.0 440.0,517.0" fill="#D9483B"/>
+<polygon points="450.0,530.0 470.0,530.0 460.0,517.0" fill="#D9483B"/>
+<polygon points="470.0,530.0 490.0,530.0 480.0,517.0" fill="#D9483B"/>
+<polygon points="490.0,530.0 510.0,530.0 500.0,517.0" fill="#D9483B"/>
+<polygon points="510.0,530.0 530.0,530.0 520.0,517.0" fill="#D9483B"/>
+<polygon points="530.0,530.0 550.0,530.0 540.0,517.0" fill="#D9483B"/>
+<polygon points="550.0,530.0 570.0,530.0 560.0,517.0" fill="#D9483B"/>
+<polygon points="570.0,530.0 590.0,530.0 580.0,517.0" fill="#D9483B"/>
+<polygon points="590.0,530.0 610.0,530.0 600.0,517.0" fill="#D9483B"/>
+<polygon points="610.0,530.0 630.0,530.0 620.0,517.0" fill="#D9483B"/>
+<polygon points="630.0,530.0 650.0,530.0 640.0,517.0" fill="#D9483B"/>
+<polygon points="650.0,530.0 670.0,530.0 660.0,517.0" fill="#D9483B"/>
+<polygon points="670.0,530.0 690.0,530.0 680.0,517.0" fill="#D9483B"/>
+<polygon points="690.0,530.0 710.0,530.0 700.0,517.0" fill="#D9483B"/>
+<polygon points="710.0,530.0 730.0,530.0 720.0,517.0" fill="#D9483B"/>
+<polygon points="730.0,530.0 750.0,530.0 740.0,517.0" fill="#D9483B"/>
+<polygon points="750.0,530.0 770.0,530.0 760.0,517.0" fill="#D9483B"/>
+<polygon points="770.0,530.0 790.0,530.0 780.0,517.0" fill="#D9483B"/>
+<circle cx="390" cy="320.0" r="100.0" fill="none" stroke="#3D6FD6" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>
+<text x="322.0" y="252.0" font-size="11" fill="#3D6FD6" paint-order="stroke" stroke="#fff" stroke-width="3">alcance 5 (na pedra)</text>
+<line x1="120.0" y1="290" x2="320.0" y2="290" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="120.0" cy="290" r="3" fill="#363636"/>
+<circle cx="320.0" cy="290" r="3" fill="#363636"/>
+<circle cx="120.0" cy="290" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="180.0" y="281.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel A · v 3</text>
+<line x1="470" y1="370" x2="470" y2="170" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="470" cy="370" r="3" fill="#363636"/>
+<circle cx="470" cy="170" r="3" fill="#363636"/>
+<circle cx="470" cy="370" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="482.0" y="274.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel B · v 2,5</text>
+<line x1="550" y1="190" x2="730" y2="110" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="550" cy="190" r="3" fill="#363636"/>
+<circle cx="730" cy="110" r="3" fill="#363636"/>
+<circle cx="640.0" cy="150.0" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="652.0" y="154.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel C · v 2,5</text>
+<circle cx="390" cy="310" r="7.6" fill="#E39B2D" stroke="#6b4e16" stroke-width="2"/>
+<polygon points="842,190 858,190 850,172" fill="#FF7A1A"/>
+<rect x="73.0" y="362.0" width="14.0" height="28.0" rx="3" fill="#3D6FD6"/>
+<polyline points="114.0,366.0 118.0,304.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="120.00000000000001" y="329.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">A</text>
+<polyline points="140.0,340.0 310.0,340.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<polyline points="326.0,330.0 382.0,314.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="358.00000000000006" y="316.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pedra</text>
+<polyline points="398.0,326.0 462.0,358.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="434.0" y="336.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">B embaixo</text>
+<polyline points="458.0,390.0 458.0,230.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="462.0" y="304.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">sobe</text>
+<polyline points="478.0,214.0 542.0,194.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="514.0" y="198.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">C</text>
+<polyline points="560.0,234.0 720.0,164.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<polyline points="740.0,154.0 770.0,126.0 810.0,174.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="774" y="120.00000000000001" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">solta</text>
+<text x="370" y="278.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
+<text x="820.0" y="154.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">fogueira</text>
+<text x="350" y="478.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">espinhos em todo o vão</text>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 8 (0–4), vão com espinhos (5–37), chegada chão 18 (38–43).</li><li>A (horizontal) leva até a pedra (3,8 da ponta direita). Na pedra o jogador fica parado.</li><li>Da pedra, B (vertical) só está ao alcance quando está embaixo (4,3); lá em cima ele fica a 8,5.</li><li>No alto de B, C (diagonal, 24°) entra no alcance pela ponta de baixo (4,3). C começa no meio (progresso 0,5): às vezes é preciso esperar uma volta.</li><li>Do alto de C, a chegada fica 3 à direita, com os pés 0,8 acima dela.</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel A (prefab PontoMovel) em (9,5; 13): Definir Por Angulo ligado, ângulo 0, comprimento 10, velocidade 3, pausa 0,8.</li><li>PontoMovel B (prefab PontoMovel) em (22; 14): Definir Por Angulo ligado, ângulo 90, comprimento 10, velocidade 2,5, pausa 1.</li><li>PontoMovel C (prefab PontoMovel) em (30,5; 20): Definir Por Angulo ligado, ângulo 23,96, comprimento 9,85, velocidade 2,5, pausa 0,6, progresso inicial 0,5.</li><li>Pedra fixa (prefab FixedHookPoint) em (18; 12).</li><li>Fogueira (checkpoint) no chão em x 41.</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 9 — Elevador ao lado do perigo</h2><p class="obj">Subir no ponto vertical sem encostar no inimigo móvel que sobe e desce ao lado; balançar para a esquerda mata.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 540" width="580" height="540" font-family="Inter, Segoe UI, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
+<rect x="30" y="30" width="520" height="480" fill="#DCE6F1"/>
+<line x1="30" y1="30" x2="30" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="30" y="526" font-size="11" fill="#4B5563" text-anchor="middle">0</text>
+<line x1="50" y1="30" x2="50" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="70" y1="30" x2="70" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="90" y1="30" x2="90" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="110" y1="30" x2="110" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="130" y1="30" x2="130" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="130" y="526" font-size="11" fill="#4B5563" text-anchor="middle">5</text>
+<line x1="150" y1="30" x2="150" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="170" y1="30" x2="170" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="190" y1="30" x2="190" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="210" y1="30" x2="210" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="230" y1="30" x2="230" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="230" y="526" font-size="11" fill="#4B5563" text-anchor="middle">10</text>
+<line x1="250" y1="30" x2="250" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="270" y1="30" x2="270" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="290" y1="30" x2="290" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="310" y1="30" x2="310" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="330" y1="30" x2="330" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="330" y="526" font-size="11" fill="#4B5563" text-anchor="middle">15</text>
+<line x1="350" y1="30" x2="350" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="370" y1="30" x2="370" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="390" y1="30" x2="390" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="410" y1="30" x2="410" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="430" y1="30" x2="430" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="430" y="526" font-size="11" fill="#4B5563" text-anchor="middle">20</text>
+<line x1="450" y1="30" x2="450" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="470" y1="30" x2="470" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="490" y1="30" x2="490" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="510" y1="30" x2="510" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="530" y1="30" x2="530" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="530" y="526" font-size="11" fill="#4B5563" text-anchor="middle">25</text>
+<line x1="550" y1="30" x2="550" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="510" x2="550" y2="510" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="514" font-size="11" fill="#4B5563" text-anchor="end">0</text>
+<line x1="30" y1="490" x2="550" y2="490" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="470" x2="550" y2="470" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="450" x2="550" y2="450" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="430" x2="550" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="410" x2="550" y2="410" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="414" font-size="11" fill="#4B5563" text-anchor="end">5</text>
+<line x1="30" y1="390" x2="550" y2="390" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="370" x2="550" y2="370" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="350" x2="550" y2="350" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="330" x2="550" y2="330" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="310" x2="550" y2="310" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="314" font-size="11" fill="#4B5563" text-anchor="end">10</text>
+<line x1="30" y1="290" x2="550" y2="290" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="270" x2="550" y2="270" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="250" x2="550" y2="250" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="230" x2="550" y2="230" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="210" x2="550" y2="210" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="214" font-size="11" fill="#4B5563" text-anchor="end">15</text>
+<line x1="30" y1="190" x2="550" y2="190" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="170" x2="550" y2="170" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="150" x2="550" y2="150" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="130" x2="550" y2="130" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="110" x2="550" y2="110" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="114" font-size="11" fill="#4B5563" text-anchor="end">20</text>
+<line x1="30" y1="90" x2="550" y2="90" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="70" x2="550" y2="70" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="50" x2="550" y2="50" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="30" x2="550" y2="30" stroke="#C9D5E3" stroke-width="0.5"/>
+<rect x="30" y="430" width="140" height="80" fill="#6B6577"/>
+<rect x="170" y="490" width="180" height="20" fill="#6B6577"/>
+<rect x="350" y="130" width="200" height="380" fill="#6B6577"/>
+<rect x="170" y="490" width="180" height="5" fill="#F7FAFD"/>
+<rect x="30" y="430" width="140" height="5" fill="#F7FAFD"/>
+<rect x="350" y="130" width="200" height="5" fill="#F7FAFD"/>
+<polygon points="170.0,490.0 190.0,490.0 180.0,477.0" fill="#D9483B"/>
+<polygon points="190.0,490.0 210.0,490.0 200.0,477.0" fill="#D9483B"/>
+<polygon points="210.0,490.0 230.0,490.0 220.0,477.0" fill="#D9483B"/>
+<polygon points="230.0,490.0 250.0,490.0 240.0,477.0" fill="#D9483B"/>
+<polygon points="250.0,490.0 270.0,490.0 260.0,477.0" fill="#D9483B"/>
+<polygon points="270.0,490.0 290.0,490.0 280.0,477.0" fill="#D9483B"/>
+<polygon points="290.0,490.0 310.0,490.0 300.0,477.0" fill="#D9483B"/>
+<polygon points="310.0,490.0 330.0,490.0 320.0,477.0" fill="#D9483B"/>
+<polygon points="330.0,490.0 350.0,490.0 340.0,477.0" fill="#D9483B"/>
+<circle cx="210" cy="180.0" r="100.0" fill="none" stroke="#3D6FD6" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>
+<text x="142.0" y="112.00000000000003" font-size="11" fill="#3D6FD6" paint-order="stroke" stroke="#fff" stroke-width="3">alcance 5 (no alto)</text>
+<line x1="140.0" y1="310" x2="140.0" y2="150" stroke="#FF5A8C" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="140.0" cy="230.0" r="8.0" fill="#F28C28" stroke="#D62828" stroke-width="3"/>
+<line x1="210" y1="370" x2="210" y2="130" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="210" cy="370" r="3" fill="#363636"/>
+<circle cx="210" cy="130" r="3" fill="#363636"/>
+<circle cx="210" cy="370" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="222.0" y="254.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel · v 2,5</text>
+<circle cx="290" cy="130" r="7.6" fill="#E39B2D" stroke="#6b4e16" stroke-width="2"/>
+<polygon points="462,130 478,130 470,112" fill="#FF7A1A"/>
+<rect x="103.0" y="402.0" width="14.0" height="28.0" rx="3" fill="#3D6FD6"/>
+<polyline points="160.0,406.0 202.0,378.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="185.0" y="386.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">gancho</text>
+<polyline points="222.0,410.0 222.0,194.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="226.0" y="296.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">sobe sem balançar ←</text>
+<polyline points="222.0,170.0 282.0,138.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="256.0" y="148.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pedra</text>
+<polyline points="298.0,134.0 340.0,90.0 380.0,118.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="344.0" y="84" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pula →</text>
+<text x="36.0" y="130" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">inimigo móvel</text>
+<text x="254.0" y="102.00000000000003" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
+<text x="436.0" y="97.99999999999997" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">fogueira</text>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 4 (0–6), poço com espinhos (7–15), saída chão 19 (16–25).</li><li>O inimigo sobe e desce em x 5,5 (de 10 a 18), começando no meio. Pendurado em x 9, sobram 2,8 de folga.</li><li>A corda do ponto tem 2,5: balançar forte para a esquerda chega a x 6,5 e encosta no inimigo.</li><li>No alto, a pedra fixa (13; 19) está a 4,7. Dela, um pulo para a direita cai na saída (pés a 20,2).</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel (prefab PontoMovel) em (9; 13): Definir Por Angulo ligado, ângulo 90, comprimento 12, velocidade 2,5, pausa 1,5.</li><li>Pedra fixa (prefab FixedHookPoint) em (13; 19).</li><li>Inimigo móvel (prefab InimigoMovel) em (5,5; 14): por ângulo, ângulo 90, comprimento 8, velocidade 2,5, trilho desligado.</li><li>Fogueira (checkpoint) no chão em x 22.</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section><section><h2>Passo 10 — Prova 2: a crista</h2><p class="obj">Tudo em sequência: corda, ponto móvel, inimigo móvel, pedra fixa e um vão de pulo + dash até a fogueira.</p><div class="mapa"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 620" width="1020" height="620" font-family="Inter, Segoe UI, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8590C"/></marker><marker id="ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
+<rect x="30" y="30" width="960" height="560" fill="#DCE6F1"/>
+<line x1="30" y1="30" x2="30" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="30" y="606" font-size="11" fill="#4B5563" text-anchor="middle">0</text>
+<line x1="50" y1="30" x2="50" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="70" y1="30" x2="70" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="90" y1="30" x2="90" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="110" y1="30" x2="110" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="130" y1="30" x2="130" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="130" y="606" font-size="11" fill="#4B5563" text-anchor="middle">5</text>
+<line x1="150" y1="30" x2="150" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="170" y1="30" x2="170" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="190" y1="30" x2="190" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="210" y1="30" x2="210" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="230" y1="30" x2="230" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="230" y="606" font-size="11" fill="#4B5563" text-anchor="middle">10</text>
+<line x1="250" y1="30" x2="250" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="270" y1="30" x2="270" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="290" y1="30" x2="290" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="310" y1="30" x2="310" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="330" y1="30" x2="330" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="330" y="606" font-size="11" fill="#4B5563" text-anchor="middle">15</text>
+<line x1="350" y1="30" x2="350" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="370" y1="30" x2="370" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="390" y1="30" x2="390" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="410" y1="30" x2="410" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="430" y1="30" x2="430" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="430" y="606" font-size="11" fill="#4B5563" text-anchor="middle">20</text>
+<line x1="450" y1="30" x2="450" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="470" y1="30" x2="470" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="490" y1="30" x2="490" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="510" y1="30" x2="510" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="530" y1="30" x2="530" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="530" y="606" font-size="11" fill="#4B5563" text-anchor="middle">25</text>
+<line x1="550" y1="30" x2="550" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="570" y1="30" x2="570" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="590" y1="30" x2="590" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="610" y1="30" x2="610" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="630" y1="30" x2="630" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="630" y="606" font-size="11" fill="#4B5563" text-anchor="middle">30</text>
+<line x1="650" y1="30" x2="650" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="670" y1="30" x2="670" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="690" y1="30" x2="690" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="710" y1="30" x2="710" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="730" y1="30" x2="730" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="730" y="606" font-size="11" fill="#4B5563" text-anchor="middle">35</text>
+<line x1="750" y1="30" x2="750" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="770" y1="30" x2="770" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="790" y1="30" x2="790" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="810" y1="30" x2="810" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="830" y1="30" x2="830" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="830" y="606" font-size="11" fill="#4B5563" text-anchor="middle">40</text>
+<line x1="850" y1="30" x2="850" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="870" y1="30" x2="870" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="890" y1="30" x2="890" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="910" y1="30" x2="910" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="930" y1="30" x2="930" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="930" y="606" font-size="11" fill="#4B5563" text-anchor="middle">45</text>
+<line x1="950" y1="30" x2="950" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="970" y1="30" x2="970" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="990" y1="30" x2="990" y2="590" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="590" x2="990" y2="590" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="594" font-size="11" fill="#4B5563" text-anchor="end">0</text>
+<line x1="30" y1="570" x2="990" y2="570" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="550" x2="990" y2="550" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="530" x2="990" y2="530" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="510" x2="990" y2="510" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="490" x2="990" y2="490" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="494" font-size="11" fill="#4B5563" text-anchor="end">5</text>
+<line x1="30" y1="470" x2="990" y2="470" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="450" x2="990" y2="450" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="430" x2="990" y2="430" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="410" x2="990" y2="410" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="390" x2="990" y2="390" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="394" font-size="11" fill="#4B5563" text-anchor="end">10</text>
+<line x1="30" y1="370" x2="990" y2="370" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="350" x2="990" y2="350" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="330" x2="990" y2="330" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="310" x2="990" y2="310" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="290" x2="990" y2="290" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="294" font-size="11" fill="#4B5563" text-anchor="end">15</text>
+<line x1="30" y1="270" x2="990" y2="270" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="250" x2="990" y2="250" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="230" x2="990" y2="230" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="210" x2="990" y2="210" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="190" x2="990" y2="190" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="194" font-size="11" fill="#4B5563" text-anchor="end">20</text>
+<line x1="30" y1="170" x2="990" y2="170" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="150" x2="990" y2="150" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="130" x2="990" y2="130" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="110" x2="990" y2="110" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="90" x2="990" y2="90" stroke="#A9B9CC" stroke-width="1"/>
+<text x="24" y="94" font-size="11" fill="#4B5563" text-anchor="end">25</text>
+<line x1="30" y1="70" x2="990" y2="70" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="50" x2="990" y2="50" stroke="#C9D5E3" stroke-width="0.5"/>
+<line x1="30" y1="30" x2="990" y2="30" stroke="#C9D5E3" stroke-width="0.5"/>
+<rect x="30" y="510" width="120" height="80" fill="#6B6577"/>
+<rect x="70" y="270" width="80" height="40" fill="#6B6577"/>
+<rect x="150" y="570" width="680" height="20" fill="#6B6577"/>
+<rect x="590" y="150" width="120" height="440" fill="#6B6577"/>
+<rect x="830" y="150" width="160" height="440" fill="#6B6577"/>
+<rect x="150" y="570" width="440" height="5" fill="#F7FAFD"/>
+<rect x="710" y="570" width="120" height="5" fill="#F7FAFD"/>
+<rect x="30" y="510" width="120" height="5" fill="#F7FAFD"/>
+<rect x="70" y="270" width="80" height="5" fill="#F7FAFD"/>
+<rect x="590" y="150" width="120" height="5" fill="#F7FAFD"/>
+<rect x="830" y="150" width="160" height="5" fill="#F7FAFD"/>
+<polygon points="150.0,570.0 170.0,570.0 160.0,557.0" fill="#D9483B"/>
+<polygon points="170.0,570.0 190.0,570.0 180.0,557.0" fill="#D9483B"/>
+<polygon points="190.0,570.0 210.0,570.0 200.0,557.0" fill="#D9483B"/>
+<polygon points="210.0,570.0 230.0,570.0 220.0,557.0" fill="#D9483B"/>
+<polygon points="230.0,570.0 250.0,570.0 240.0,557.0" fill="#D9483B"/>
+<polygon points="250.0,570.0 270.0,570.0 260.0,557.0" fill="#D9483B"/>
+<polygon points="270.0,570.0 290.0,570.0 280.0,557.0" fill="#D9483B"/>
+<polygon points="290.0,570.0 310.0,570.0 300.0,557.0" fill="#D9483B"/>
+<polygon points="310.0,570.0 330.0,570.0 320.0,557.0" fill="#D9483B"/>
+<polygon points="330.0,570.0 350.0,570.0 340.0,557.0" fill="#D9483B"/>
+<polygon points="350.0,570.0 370.0,570.0 360.0,557.0" fill="#D9483B"/>
+<polygon points="370.0,570.0 390.0,570.0 380.0,557.0" fill="#D9483B"/>
+<polygon points="390.0,570.0 410.0,570.0 400.0,557.0" fill="#D9483B"/>
+<polygon points="410.0,570.0 430.0,570.0 420.0,557.0" fill="#D9483B"/>
+<polygon points="430.0,570.0 450.0,570.0 440.0,557.0" fill="#D9483B"/>
+<polygon points="450.0,570.0 470.0,570.0 460.0,557.0" fill="#D9483B"/>
+<polygon points="470.0,570.0 490.0,570.0 480.0,557.0" fill="#D9483B"/>
+<polygon points="490.0,570.0 510.0,570.0 500.0,557.0" fill="#D9483B"/>
+<polygon points="510.0,570.0 530.0,570.0 520.0,557.0" fill="#D9483B"/>
+<polygon points="530.0,570.0 550.0,570.0 540.0,557.0" fill="#D9483B"/>
+<polygon points="550.0,570.0 570.0,570.0 560.0,557.0" fill="#D9483B"/>
+<polygon points="570.0,570.0 590.0,570.0 580.0,557.0" fill="#D9483B"/>
+<polygon points="590.0,570.0 610.0,570.0 600.0,557.0" fill="#D9483B"/>
+<polygon points="610.0,570.0 630.0,570.0 620.0,557.0" fill="#D9483B"/>
+<polygon points="630.0,570.0 650.0,570.0 640.0,557.0" fill="#D9483B"/>
+<polygon points="650.0,570.0 670.0,570.0 660.0,557.0" fill="#D9483B"/>
+<polygon points="670.0,570.0 690.0,570.0 680.0,557.0" fill="#D9483B"/>
+<polygon points="690.0,570.0 710.0,570.0 700.0,557.0" fill="#D9483B"/>
+<polygon points="710.0,570.0 730.0,570.0 720.0,557.0" fill="#D9483B"/>
+<polygon points="730.0,570.0 750.0,570.0 740.0,557.0" fill="#D9483B"/>
+<polygon points="750.0,570.0 770.0,570.0 760.0,557.0" fill="#D9483B"/>
+<polygon points="770.0,570.0 790.0,570.0 780.0,557.0" fill="#D9483B"/>
+<polygon points="790.0,570.0 810.0,570.0 800.0,557.0" fill="#D9483B"/>
+<polygon points="810.0,570.0 830.0,570.0 820.0,557.0" fill="#D9483B"/>
+<circle cx="360.0" cy="300.0" r="100.0" fill="none" stroke="#3D6FD6" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>
+<text x="292.0" y="232.00000000000003" font-size="11" fill="#3D6FD6" paint-order="stroke" stroke="#fff" stroke-width="3">alcance 5</text>
+<line x1="120.0" y1="310" x2="120.0" y2="490" stroke="#B5651D" stroke-width="4"/>
+<line x1="116.0" y1="480.0" x2="124.0" y2="480.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="460.0" x2="124.0" y2="460.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="440.0" x2="124.0" y2="440.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="420.0" x2="124.0" y2="420.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="400.0" x2="124.0" y2="400.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="380.0" x2="124.0" y2="380.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="360.0" x2="124.0" y2="360.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="340.0" x2="124.0" y2="340.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="116.0" y1="320.0" x2="124.0" y2="320.0" stroke="#B5651D" stroke-width="2"/>
+<line x1="400.0" y1="220.0" x2="510" y2="220.0" stroke="#FF5A8C" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="455.0" cy="220.0" r="8.0" fill="#F28C28" stroke="#D62828" stroke-width="3"/>
+<line x1="160.0" y1="250" x2="360.0" y2="250" stroke="#8D8E8F" stroke-width="4" stroke-linecap="round"/>
+<circle cx="160.0" cy="250" r="3" fill="#363636"/>
+<circle cx="360.0" cy="250" r="3" fill="#363636"/>
+<circle cx="160.0" cy="250" r="7.6" fill="#F2C94C" stroke="#5c5d5e" stroke-width="2"/>
+<text x="220.0" y="241.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">PontoMovel · v 3</text>
+<circle cx="520.0" cy="110" r="7.6" fill="#E39B2D" stroke="#6b4e16" stroke-width="2"/>
+<polygon points="42,510 58,510 50,492" fill="#FF7A1A"/>
+<polygon points="922,150 938,150 930,132" fill="#FF7A1A"/>
+<rect x="79.0" y="482.0" width="14.0" height="28.0" rx="3" fill="#3D6FD6"/>
+<polyline points="94.0,482.0 114.0,466.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="108.0" y="468.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">agarra</text>
+<polyline points="132.0,460.0 132.0,330.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="136.0" y="389.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">sobe</text>
+<polyline points="134.0,306.0 156.0,262.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="149.0" y="278.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">A</text>
+<polyline points="180.0,300.0 350.0,300.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<polyline points="366.0,290.0 398.0,234.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="386.0" y="256.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">inimigo</text>
+<polyline points="410.0,200.0 450.0,138.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="434.0" y="163.0" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">quique</text>
+<polyline points="450.0,138.0 512.0,116.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="485.0" y="121.00000000000003" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pedra</text>
+<polyline points="528.0,114.0 560.0,78.0 610.0,134.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="564.0" y="71.99999999999997" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pula</text>
+<polyline points="698.0,130.0 760.0,98.0 840.0,134.0" fill="none" stroke="#E8590C" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#seta)"/>
+<text x="764.0" y="91.99999999999997" font-size="12" font-weight="600" fill="#E8590C" paint-order="stroke" stroke="#fff" stroke-width="3">pulo + dash</text>
+<line x1="710" y1="180.0" x2="830" y2="180.0" stroke="#4B5563" stroke-width="1.3" marker-start="url(#ponta)" marker-end="url(#ponta)"/>
+<text x="774.0" y="176.0" font-size="11" fill="#4B5563" paint-order="stroke" stroke="#fff" stroke-width="3">6</text>
+<text x="562.0" y="93.99999999999999" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">pedra fixa</text>
+<text x="420.0" y="190" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">inimigo móvel</text>
+<text x="882.0" y="110" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">fogueira</text>
+<text x="310" y="518.0" font-size="11" fill="#1B1F24" paint-order="stroke" stroke="#fff" stroke-width="3">espinhos em todo o vão</text>
+</svg></div><div class="cols"><div><h3>Como funciona</h3><ul><li>Início chão 4 com fogueira (0–5); laje (2–5, 14–15) segurando a corda em x 4; vão com espinhos (6–39); bordas chão 22 (28–33 e 40–47).</li><li>Do alto da corda, A está a 3,9; do chão, a 12,6.</li><li>Na ponta direita de A, o inimigo móvel (18,5 a 24) só está ao alcance na ponta esquerda dele (4,5).</li><li>Durante o quique, mirar na pedra fixa (24,5; 24): no caminho ela passa a 3,8. Da pedra, pulo para a direita até a borda.</li><li>Fim: vão de 6 entre as bordas, só com pulo + dash. Fogueira no fim.</li></ul></div><div><h3>Montagem</h3><ul><li>PontoMovel (prefab PontoMovel) em (11,5; 17): Definir Por Angulo ligado, ângulo 0, comprimento 10, velocidade 3, pausa 0,6.</li><li>Pedra fixa (prefab FixedHookPoint) em (24,5; 24).</li><li>Inimigo móvel (prefab InimigoMovel) em (21,25; 18,5): por ângulo, ângulo 0, comprimento 5,5, velocidade 2, trilho desligado.</li><li>Fogueira (checkpoint) no chão em x 1.</li><li>Fogueira (checkpoint) no chão em x 45.</li><li>Corda no tilemap rope_climb, coluna x 4, de y 5 a 13 (o tilemap precisa do componente Corda).</li><li>Espinhos no tilemap spike_groupo/spikes, nas células marcadas em vermelho.</li></ul></div></div></section>
 </main></body></html>
