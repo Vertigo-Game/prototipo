@@ -81,6 +81,22 @@ namespace HookPrototype
         [SerializeField] private float momentumDeceleration = 14f;
         [SerializeField] private float momentumEndSpeed = 6f;
 
+        [Header("Balanço no ponto de ancoragem")]
+        [Tooltip("Distância do jogador ao ponto quando ele fica pendurado na corda.")]
+        [SerializeField] private float swingRopeLength = 2.5f;
+        [Tooltip("Aceleração horizontal ao segurar esquerda/direita pendurado.")]
+        [SerializeField] private float swingAcceleration = 18f;
+        [Tooltip("Perda de velocidade por segundo (atrito do ar), para o balanço ir amortecendo.")]
+        [SerializeField, Min(0f)] private float swingDamping = 0.25f;
+        [SerializeField] private float swingMaxSpeed = 14f;
+        [Tooltip("Cores do cabo de aço enquanto o gancho está preso: o claro e o tom mais escuro que alterna.")]
+        [SerializeField] private Color cableColor = new Color32(0x8d, 0x8e, 0x8f, 255);
+        [SerializeField] private Color cableShadeColor = new Color32(0x5a, 0x5b, 0x5c, 255);
+        [Tooltip("Pixels por unidade da arte do jogo: o cabo usa pixels desse tamanho.")]
+        [SerializeField, Min(1f)] private float cablePixelsPerUnit = 16f;
+        [Tooltip("Espessura do cabo em pixels da arte.")]
+        [SerializeField, Min(1)] private int cableThicknessPixels = 1;
+
         [Header("Death")]
         [Tooltip("Tamanho da colisão do corpo deitado, em unidades do mundo. A base continua na altura dos pés.")]
         [SerializeField] private Vector2 corpseColliderSize = new Vector2(1.3f, 0.6f);
@@ -97,6 +113,11 @@ namespace HookPrototype
         private Animator animator;
         private SpriteRenderer visual;
         private LineRenderer aimLine;
+        private Material aimMaterial;
+        private Material cableMaterial;
+        private Texture2D cableTexture;
+        private Vector2 lastAnchorPosition;
+        private float swingLength;
         private SonsGancho sons;
         private HookTarget currentTarget;
         private Vector2 aimDirection = Vector2.up;
@@ -286,8 +307,57 @@ namespace HookPrototype
             aimLine.endWidth = 0.035f;
             aimLine.numCapVertices = 4;
             aimLine.sortingOrder = 20;
-            aimLine.material = new Material(Shader.Find("Sprites/Default"));
+            aimMaterial = new Material(Shader.Find("Sprites/Default"));
+            aimLine.material = aimMaterial;
             aimLine.enabled = false;
+            CreateCableMaterial();
+        }
+
+        private void OnDestroy()
+        {
+            if (aimMaterial != null) Destroy(aimMaterial);
+            if (cableMaterial != null) Destroy(cableMaterial);
+            if (cableTexture != null) Destroy(cableTexture);
+        }
+
+        // Textura de 3 pixels ao longo do cabo (claro, claro, escuro), repetida a cada 3 pixels da arte.
+        private void CreateCableMaterial()
+        {
+            cableTexture = new Texture2D(3, 1, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Repeat,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            cableTexture.SetPixel(0, 0, cableColor);
+            cableTexture.SetPixel(1, 0, cableColor);
+            cableTexture.SetPixel(2, 0, cableShadeColor);
+            cableTexture.Apply(false, true);
+            cableMaterial = new Material(Shader.Find("Sprites/Default")) { mainTexture = cableTexture };
+        }
+
+        // Mira: linha lisa que afina e muda de cor conforme o alvo.
+        private void UseAimLineStyle()
+        {
+            aimLine.sharedMaterial = aimMaterial;
+            aimLine.textureMode = LineTextureMode.Stretch;
+            aimLine.sortingOrder = 20;
+            aimLine.startWidth = 0.075f;
+            aimLine.endWidth = 0.035f;
+        }
+
+        // Gancho preso: cabo de aço cinza, de espessura fixa e desenhado atrás do jogador, com o tom escuro alternando.
+        private void UseCableStyle()
+        {
+            aimLine.sharedMaterial = cableMaterial;
+            aimLine.textureMode = LineTextureMode.Tile;
+            aimLine.textureScale = new Vector2(cablePixelsPerUnit / 3f, 1f);
+            aimLine.startWidth = cableThicknessPixels / cablePixelsPerUnit;
+            aimLine.endWidth = cableThicknessPixels / cablePixelsPerUnit;
+            // Atrás do personagem: o cabo sai de trás dele em vez de cobri-lo.
+            aimLine.sortingOrder = visual != null ? visual.sortingOrder - 1 : 20;
+            aimLine.startColor = Color.white;
+            aimLine.endColor = Color.white;
         }
 
         private void Update()
@@ -379,9 +449,16 @@ namespace HookPrototype
 
             if (hanging && jumpPressed)
             {
-                // Preso num ponto fixo: pular solta e já impulsiona para cima (a velocidade era zero).
+                // Preso num ponto: pular solta a corda e impulsiona para cima, mantendo a velocidade do balanço.
+                float swingVelocityY = body.linearVelocity.y;
                 CancelHook(true);
                 Jump();
+                if (swingVelocityY > body.linearVelocity.y)
+                {
+                    Vector2 launched = body.linearVelocity;
+                    launched.y = swingVelocityY;
+                    body.linearVelocity = launched;
+                }
             }
             else if (!pulling && !aiming &&
                      timeSinceJumpPressed <= jumpBufferTime && timeSinceGrounded <= coyoteTime)
@@ -893,6 +970,7 @@ namespace HookPrototype
         {
             aiming = true;
             currentTarget = null;
+            UseAimLineStyle();
             aimLine.enabled = true;
             SetTimeScale(aimingTimeScale);
             if (sons != null)
@@ -1002,6 +1080,7 @@ namespace HookPrototype
             CancelStep();
             body.gravityScale = 0f;
             dashTimer = 0f;
+            UseCableStyle();
             aimLine.enabled = true;
             currentTarget.NotifyHooked();
             if (sons != null)
@@ -1028,11 +1107,7 @@ namespace HookPrototype
 
             if (hanging)
             {
-                // Fixed points hold the player in place until the hook is cancelled.
-                body.position = targetPosition;
-                body.linearVelocity = Vector2.zero;
-                aimLine.SetPosition(0, targetPosition);
-                aimLine.SetPosition(1, targetPosition);
+                Swing(targetPosition);
                 return;
             }
 
@@ -1042,7 +1117,9 @@ namespace HookPrototype
             aimLine.SetPosition(0, body.position);
             aimLine.SetPosition(1, targetPosition);
 
-            if (distance <= targetReachDistance)
+            // Num ponto de ancoragem o jogador para na distância da corda, não em cima do ponto.
+            float reachDistance = currentTarget.IsEnemy ? targetReachDistance : Mathf.Max(targetReachDistance, swingRopeLength);
+            if (distance <= reachDistance)
             {
                 ReachTarget();
                 return;
@@ -1092,10 +1169,66 @@ namespace HookPrototype
                 pulling = true;
                 dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
-                body.gravityScale = 0f;
-                body.linearVelocity = Vector2.zero;
+                body.gravityScale = baseGravityScale;
                 aimLine.enabled = true;
+
+                // Começa a balançar: a velocidade do puxão não some, é desviada para a direção do balanço.
+                Vector2 anchor = reachedTarget.transform.position;
+                Vector2 toBody = body.position - anchor;
+                swingLength = Mathf.Clamp(toBody.magnitude, targetReachDistance, swingRopeLength);
+                Vector2 radial = toBody.sqrMagnitude > 0.0001f ? toBody.normalized : Vector2.down;
+                body.linearVelocity = SwingEntryVelocity(incomingVelocity, radial);
+                lastAnchorPosition = anchor;
             }
+        }
+
+        // Mantém a intensidade da velocidade do puxão (até o máximo do balanço) e a gira para ficar
+        // perpendicular à corda, do lado para onde o jogador já estava indo.
+        private Vector2 SwingEntryVelocity(Vector2 incoming, Vector2 radial)
+        {
+            Vector2 tangent = new Vector2(-radial.y, radial.x);
+            float along = Vector2.Dot(incoming, tangent);
+            float side = Mathf.Abs(along) > 0.1f
+                ? Mathf.Sign(along)
+                : (Mathf.Abs(moveInput) > 0.1f && Mathf.Abs(tangent.x) > 0.1f ? Mathf.Sign(moveInput) * Mathf.Sign(tangent.x) : 1f);
+            return tangent * (side * Mathf.Min(incoming.magnitude, swingMaxSpeed));
+        }
+
+        // Pêndulo: a corda só puxa (não empurra), então com folga o jogador cai livre até ela esticar.
+        // Esquerda/direita acelera o balanço; o ponto, se andar, leva a corda junto.
+        private void Swing(Vector2 anchor)
+        {
+            float dt = Time.fixedDeltaTime;
+            Vector2 anchorVelocity = dt > 0f ? (anchor - lastAnchorPosition) / dt : Vector2.zero;
+            lastAnchorPosition = anchor;
+
+            Vector2 toBody = body.position - anchor;
+            float distance = toBody.magnitude;
+            Vector2 radial = distance > 0.0001f ? toBody / distance : Vector2.down;
+
+            // Tudo calculado em relação ao ponto, que pode estar andando.
+            Vector2 velocity = body.linearVelocity - anchorVelocity;
+            velocity.x += moveInput * swingAcceleration * dt;
+            velocity *= Mathf.Max(0f, 1f - swingDamping * dt);
+            velocity = Vector2.ClampMagnitude(velocity, swingMaxSpeed);
+
+            if (distance >= swingLength)
+            {
+                float outward = Vector2.Dot(velocity, radial);
+                if (outward > 0f)
+                {
+                    velocity -= radial * outward;
+                }
+
+                if (distance > swingLength)
+                {
+                    body.position = anchor + radial * swingLength;
+                }
+            }
+
+            body.linearVelocity = velocity + anchorVelocity;
+            aimLine.SetPosition(0, body.position);
+            aimLine.SetPosition(1, anchor);
         }
 
         private void ReleasePull()
@@ -1109,7 +1242,7 @@ namespace HookPrototype
 
             if (wasHanging)
             {
-                body.linearVelocity = Vector2.zero;
+                // Soltar a corda balançando mantém a velocidade do balanço.
                 return;
             }
 
