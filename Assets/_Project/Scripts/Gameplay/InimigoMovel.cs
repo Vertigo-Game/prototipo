@@ -17,7 +17,15 @@ namespace Vertigo.Gameplay
     [RequireComponent(typeof(Rigidbody2D), typeof(HookTarget))]
     public sealed class InimigoMovel : MonoBehaviour
     {
-        [Header("Rota (pontos relativos à posição do inimigo na cena)")]
+        [Header("Rota por ângulo (mais simples para uma reta)")]
+        [SerializeField, Tooltip("Ligado: a rota é uma reta definida por ângulo e comprimento, centrada no objeto. A lista de pontos abaixo é ignorada.")]
+        private bool definirPorAngulo;
+        [SerializeField, Tooltip("Direção da reta em graus: 0 = horizontal, 90 = vertical, 45 = diagonal para cima à direita.")]
+        private float angulo;
+        [SerializeField, Min(0f), Tooltip("Comprimento total da reta, de uma ponta à outra.")]
+        private float comprimento = 4f;
+
+        [Header("Rota por pontos (relativos à posição do objeto na cena)")]
         [SerializeField] private Vector2[] pontos = { new Vector2(-2f, 0f), new Vector2(2f, 0f) };
         [SerializeField, Tooltip("Desligado: vai e volta. Ligado: do último ponto segue para o primeiro.")]
         private bool emLoop;
@@ -29,6 +37,8 @@ namespace Vertigo.Gameplay
         [SerializeField] private bool comecaVoltando;
         [SerializeField, Min(0f), Tooltip("Segundos parado antes de inverter o sentido (só na ida e volta).")]
         private float pausaNosExtremos;
+        [SerializeField, Tooltip("Ligado: fica imóvel enquanto o gancho está nele. Desligado: continua andando e leva o jogador junto (ponto de ancoragem móvel).")]
+        private bool pararAoSerFisgado = true;
 
         private const int MaxReflexoesPorPasso = 4;
 
@@ -56,7 +66,7 @@ namespace Vertigo.Gameplay
             corpo.interpolation = RigidbodyInterpolation2D.Interpolate;
             alvo = GetComponent<HookTarget>();
 
-            if (pontos == null || pontos.Length < 2)
+            if (PontosRelativos().Length < 2)
             {
                 Debug.LogWarning($"{name}: a rota do inimigo móvel precisa de pelo menos dois pontos.", this);
                 enabled = false;
@@ -77,13 +87,23 @@ namespace Vertigo.Gameplay
             Estado = EstadoInimigo.Movendo;
         }
 
+        public bool EmLoop => emLoop;
+
+        // Pontos da rota no mundo (já valem a partir do Awake). Vazio se a rota for inválida.
+        public Vector2[] PontosDaRotaNoMundo()
+        {
+            Vector2[] relativos = PontosRelativos();
+            return relativos.Length < 2 ? new Vector2[0] : PontosNoMundo(origem);
+        }
+
         // Retângulo que contém todos os pontos da rota, no mundo.
         public Bounds AreaDaRota
         {
             get
             {
-                Bounds area = new Bounds(origem + pontos[0], Vector3.zero);
-                foreach (Vector2 ponto in pontos)
+                Vector2[] relativos = PontosRelativos();
+                Bounds area = new Bounds(origem + relativos[0], Vector3.zero);
+                foreach (Vector2 ponto in relativos)
                 {
                     area.Encapsulate(origem + ponto);
                 }
@@ -159,6 +179,11 @@ namespace Vertigo.Gameplay
                 return;
             }
 
+            if (!pararAoSerFisgado)
+            {
+                return;
+            }
+
             estadoAntesDoHook = Estado;
             Estado = EstadoInimigo.Fisgado;
         }
@@ -174,12 +199,26 @@ namespace Vertigo.Gameplay
             Estado = estadoAntesDoHook;
         }
 
+        // Pontos da rota em relação ao objeto: a reta por ângulo e comprimento, ou a lista configurada.
+        private Vector2[] PontosRelativos()
+        {
+            if (!definirPorAngulo)
+            {
+                return pontos ?? new Vector2[0];
+            }
+
+            float radianos = angulo * Mathf.Deg2Rad;
+            Vector2 meia = new Vector2(Mathf.Cos(radianos), Mathf.Sin(radianos)) * (comprimento * 0.5f);
+            return new[] { -meia, meia };
+        }
+
         private Vector2[] PontosNoMundo(Vector2 referencia)
         {
-            Vector2[] mundo = new Vector2[pontos.Length];
-            for (int i = 0; i < pontos.Length; i++)
+            Vector2[] relativos = PontosRelativos();
+            Vector2[] mundo = new Vector2[relativos.Length];
+            for (int i = 0; i < relativos.Length; i++)
             {
-                mundo[i] = referencia + pontos[i];
+                mundo[i] = referencia + relativos[i];
             }
 
             return mundo;
@@ -187,7 +226,7 @@ namespace Vertigo.Gameplay
 
         private void OnDrawGizmos()
         {
-            if (pontos == null || pontos.Length < 2)
+            if (PontosRelativos().Length < 2)
             {
                 return;
             }
