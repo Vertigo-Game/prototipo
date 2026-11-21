@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 1719568275}
   - component: {fileID: 5690434495127625045}
   - component: {fileID: 7203521562036904076}
+  - component: {fileID: 9214292912227586548}
   m_Layer: 0
   m_Name: EnemyHookPoint
   m_TagString: Untagged
@@ -65,7 +66,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 21d5d4e6680341f4898a3d2721670d3e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -211,9 +212,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.ContornoPerigo
   cor: {r: 0.92, g: 0.16, b: 0.12, a: 1}
+  opacidade: 1
   materialSilhueta: {fileID: 2100000, guid: e7f6468842073a545818fb7c972faa39, type: 2}
   espessuraPixels: 1
   pixelsPorUnidade: 16
+  arcoIris: 0
+  velocidadeArcoIris: 0.8
 --- !u!114 &7203521562036904076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230,3 +234,17 @@ MonoBehaviour:
   pontasSaindo: {fileID: 8300000, guid: 0bd16a82b3694421860abca2da040ded, type: 3}
   morte: {fileID: 8300000, guid: 64c122360c7844f8a9ec8d213f40046d, type: 3}
   volume: 1
+--- !u!114 &9214292912227586548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719568269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 741cacf52b192994f800e2c0379f84f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.CorDoCristal
+  recolorir: 0
+  cor: {r: 1, g: 0, b: 0, a: 1}

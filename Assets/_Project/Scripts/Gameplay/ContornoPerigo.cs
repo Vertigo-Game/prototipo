@@ -2,32 +2,41 @@ using UnityEngine;
 
 namespace Vertigo.Gameplay
 {
-    // Contorno fixo de 1 pixel em volta do sprite, para avisar que encostar mata (inimigos).
-    // São 4 cópias do sprite em silhueta, deslocadas 1 pixel para cada lado, desenhadas atrás dele.
+    // Quatro cópias em silhueta, deslocadas para cada lado e desenhadas atrás do sprite.
     // Acompanha a animação e o flip, e some enquanto o inimigo está capturado (carcaça).
     public sealed class ContornoPerigo : MonoBehaviour
     {
         private static readonly Vector2[] Direcoes = { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
         private static readonly int CorId = Shader.PropertyToID("_Color");
 
-        [Tooltip("Cor final do contorno deste inimigo. Substitui a cor do material e pode ser alterada durante o Play.")]
+        [Tooltip("Cor do contorno fixo. No modo arco-íris, somente a transparência desta cor é usada.")]
         [SerializeField] private Color cor = new Color(0.92f, 0.16f, 0.12f, 1f);
+        [SerializeField, Range(0f, 1f), Tooltip("Opacidade do contorno quando o inimigo está sem perfil visual.")]
+        private float opacidade = 1f;
         [Tooltip("Material com o shader Vertigo/SilhuetaSprite (pinta o sprite inteiro com uma cor só).")]
         [SerializeField] private Material materialSilhueta;
         [SerializeField, Min(1)] private int espessuraPixels = 1;
         [Tooltip("Pixels por unidade da arte do jogo: o contorno tem a espessura de um pixel da tela, não do sprite.")]
         [SerializeField, Min(1f)] private float pixelsPorUnidade = 16f;
+        [SerializeField] private bool arcoIris;
+        [SerializeField, Min(0f), Tooltip("Ciclos de cor por segundo. Zero deixa as cores do arco-íris paradas.")]
+        private float velocidadeArcoIris = 0.8f;
 
         private SpriteRenderer original;
         private SpriteRenderer[] copias;
         private RenascimentoInimigo renascimento;
+        private CorDoCristal cristal;
         private MaterialPropertyBlock bloco;
         private Color corAplicada;
+        private bool arcoIrisAplicado;
+        private float faseArcoIris;
+        private PerfilVisualInimigo Perfil => cristal != null && cristal.isActiveAndEnabled ? cristal.Perfil : null;
 
         private void Awake()
         {
             original = GetComponentInChildren<SpriteRenderer>();
             renascimento = GetComponent<RenascimentoInimigo>();
+            cristal = GetComponent<CorDoCristal>();
             if (original == null || materialSilhueta == null)
             {
                 enabled = false;
@@ -35,8 +44,8 @@ namespace Vertigo.Gameplay
             }
 
             bloco = new MaterialPropertyBlock();
-            bloco.SetColor(CorId, cor);
-            corAplicada = cor;
+            corAplicada = CorComOpacidade(Perfil);
+            bloco.SetColor(CorId, corAplicada);
 
             copias = new SpriteRenderer[Direcoes.Length];
             for (int i = 0; i < Direcoes.Length; i++)
@@ -54,15 +63,20 @@ namespace Vertigo.Gameplay
 
         private void LateUpdate()
         {
-            bool atualizarCor = cor != corAplicada;
-            if (atualizarCor)
+            PerfilVisualInimigo perfil = Perfil;
+            Color corBase = CorComOpacidade(perfil);
+            bool arcoIrisManual = perfil == null && arcoIris;
+            bool atualizarCor = arcoIrisManual || arcoIrisAplicado || corBase != corAplicada;
+            if (arcoIrisManual)
             {
-                bloco.SetColor(CorId, cor);
-                corAplicada = cor;
+                faseArcoIris = Mathf.Repeat(faseArcoIris + Time.deltaTime * velocidadeArcoIris, 1f);
             }
 
+            corAplicada = corBase;
+            arcoIrisAplicado = arcoIrisManual;
+
             Sprite sprite = original.sprite;
-            bool visivel = sprite != null && original.enabled && original.gameObject.activeInHierarchy &&
+            bool visivel = corBase.a > 0f && sprite != null && original.enabled && original.gameObject.activeInHierarchy &&
                            (renascimento == null || !renascimento.Capturado);
 
             // Espessura em unidades do mundo, convertida para o espaço local (o sprite pode estar escalado).
@@ -76,6 +90,15 @@ namespace Vertigo.Gameplay
                 SpriteRenderer sr = copias[i];
                 if (atualizarCor)
                 {
+                    Color corContorno = corBase;
+                    if (arcoIrisManual)
+                    {
+                        float matiz = Mathf.Repeat(faseArcoIris + (float)i / copias.Length, 1f);
+                        corContorno = Color.HSVToRGB(matiz, 0.9f, 1f);
+                        corContorno.a = corBase.a;
+                    }
+
+                    bloco.SetColor(CorId, corContorno);
                     sr.SetPropertyBlock(bloco);
                 }
 
@@ -90,6 +113,18 @@ namespace Vertigo.Gameplay
                 sr.flipY = original.flipY;
                 sr.transform.localPosition = (Vector3)Vector2.Scale(Direcoes[i], passo);
             }
+        }
+
+        private Color CorComOpacidade(PerfilVisualInimigo perfil)
+        {
+            if (perfil == null)
+            {
+                return new Color(cor.r, cor.g, cor.b, cor.a * opacidade);
+            }
+
+            Color corPerfil = perfil.CorNoTempo(Time.time);
+            corPerfil.a = perfil.OpacidadeContorno;
+            return corPerfil;
         }
 
         private void OnDisable()
