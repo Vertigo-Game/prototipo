@@ -98,7 +98,7 @@ namespace Vertigo.Gameplay
                 return;
             }
 
-            PlayerController player = FindFirstObjectByType<PlayerController>();
+            PlayerController player = FindAnyObjectByType<PlayerController>();
             if (player == null)
             {
                 return;
@@ -110,7 +110,7 @@ namespace Vertigo.Gameplay
                 player.CollectHook();
             }
 
-            VerticalCameraFollow seguidor = FindFirstObjectByType<VerticalCameraFollow>();
+            VerticalCameraFollow seguidor = FindAnyObjectByType<VerticalCameraFollow>();
             if (seguidor != null)
             {
                 seguidor.Encaixar();
