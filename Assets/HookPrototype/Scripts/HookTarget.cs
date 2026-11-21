@@ -7,13 +7,20 @@ namespace HookPrototype
     public sealed class HookTarget : MonoBehaviour
     {
         [SerializeField] private bool isEnemy;
-        [SerializeField, Tooltip("Ligado: o jogador fica pendurado numa corda e balança (ponto móvel). Desligado: fica preso parado, pelas mãos (ponto fixo).")]
-        private bool swings;
+        [SerializeField]
+        [Tooltip("Ligado (padrão): o jogador fica preso parado no ponto, pelas mãos. Desligado: fica pendurado numa corda e balança.")]
+        private bool stopAtAnchor = true;
+        [SerializeField, Min(0f)]
+        [Tooltip("Velocidade vertical ao capturar este inimigo. Zero usa a velocidade normal do jogador.")]
+        private float verticalCaptureBounceSpeed;
+        [SerializeField]
+        [Tooltip("Mantém o impulso lateral padrão quando a velocidade vertical é personalizada.")]
+        private bool keepHorizontalCaptureBounce;
 
         public bool IsEnemy => isEnemy;
-
-        /// <summary>Whether the player hangs from a rope and swings instead of being held still.</summary>
-        public bool Swings => swings;
+        public bool StopsAtAnchor => !isEnemy && stopAtAnchor;
+        public float VerticalCaptureBounceSpeed => verticalCaptureBounceSpeed;
+        public bool KeepHorizontalCaptureBounce => keepHorizontalCaptureBounce;
 
         /// <summary>Raised when a launched hook connects to this target.</summary>
         public event Action Hooked;
