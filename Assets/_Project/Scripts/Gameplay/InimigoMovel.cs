@@ -41,11 +41,21 @@ namespace Vertigo.Gameplay
         [SerializeField, Tooltip("Ligado: fica imóvel enquanto o gancho está nele. Desligado: continua andando e leva o jogador junto (ponto de ancoragem móvel).")]
         private bool pararAoSerFisgado = true;
 
+        [Header("Percepção")]
+        [SerializeField, Min(0f), Tooltip("Raio horizontal da elipse, em unidades do mundo. Zero inicia a rota imediatamente.")]
+        private float raioPercepcao;
+        [SerializeField, Min(0f), Tooltip("Raio vertical da elipse, em unidades do mundo. Zero usa o raio horizontal.")]
+        private float raioVerticalPercepcao;
+        [SerializeField, Tooltip("Deslocamento do centro da elipse em relação ao inimigo, em unidades do mundo.")]
+        private Vector2 deslocamentoPercepcao;
+
         private const int MaxReflexoesPorPasso = 4;
 
         private Rigidbody2D corpo;
         private HookTarget alvo;
         private RotaPatrulha rota;
+        private PlayerController jogador;
+        private bool rotaAtivada;
         private Vector2 origem;
         private EstadoInimigo estadoAntesDoHook;
         private float tempoParado;
@@ -53,6 +63,7 @@ namespace Vertigo.Gameplay
         public EstadoInimigo Estado { get; private set; }
         public int Sentido => rota.Sentido;
         public Vector2 PosicaoNaRota => rota.Posicao;
+        private float RaioVerticalPercepcao => raioVerticalPercepcao > 0f ? raioVerticalPercepcao : raioPercepcao;
 
         public float Velocidade
         {
@@ -78,10 +89,11 @@ namespace Vertigo.Gameplay
             Reiniciar();
         }
 
-        // Volta para o início configurado da rota, andando. Também usado quando o inimigo reaparece.
+        // Volta ao início da rota e rearma a percepção quando o inimigo reaparece.
         public void Reiniciar()
         {
-            rota = new RotaPatrulha(PontosNoMundo(origem), emLoop, progressoInicial, comecaVoltando);
+            rota = CriarRota(origem);
+            rotaAtivada = raioPercepcao <= 0f;
             transform.position = new Vector3(rota.Posicao.x, rota.Posicao.y, transform.position.z);
             corpo.position = rota.Posicao;
             tempoParado = 0f;
@@ -127,6 +139,16 @@ namespace Vertigo.Gameplay
 
         private void FixedUpdate()
         {
+            if (!rotaAtivada)
+            {
+                if (!PercebeJogador())
+                {
+                    return;
+                }
+
+                rotaAtivada = true;
+            }
+
             switch (Estado)
             {
                 case EstadoInimigo.Movendo:
@@ -142,6 +164,35 @@ namespace Vertigo.Gameplay
                     break;
                 // Fisgado: fica imóvel até o hook capturar ou soltar.
             }
+        }
+
+        private bool PercebeJogador()
+        {
+            if (raioPercepcao <= 0f)
+            {
+                return true;
+            }
+
+            if (jogador == null)
+            {
+                foreach (PlayerController candidato in FindObjectsByType<PlayerController>(FindObjectsSortMode.None))
+                {
+                    if (candidato.gameObject.scene == gameObject.scene)
+                    {
+                        jogador = candidato;
+                        break;
+                    }
+                }
+            }
+
+            if (jogador == null || !jogador.isActiveAndEnabled || jogador.IsDead)
+            {
+                return false;
+            }
+
+            Vector2 distancia = (Vector2)jogador.transform.position - (corpo.position + deslocamentoPercepcao);
+            Vector2 proporcao = new Vector2(distancia.x / raioPercepcao, distancia.y / RaioVerticalPercepcao);
+            return proporcao.sqrMagnitude <= 1f;
         }
 
         // Para por alguns segundos e depois volta a andar sozinho. Ignorado enquanto fisgado.
@@ -225,6 +276,11 @@ namespace Vertigo.Gameplay
             return mundo;
         }
 
+        private RotaPatrulha CriarRota(Vector2 referencia)
+        {
+            return new RotaPatrulha(PontosNoMundo(referencia), emLoop, progressoInicial, comecaVoltando);
+        }
+
         private void OnDrawGizmos()
         {
             if (PontosRelativos().Length < 2)
@@ -254,6 +310,35 @@ namespace Vertigo.Gameplay
                 Vector2 inicio = new RotaPatrulha(mundo, emLoop, progressoInicial, comecaVoltando).Posicao;
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawSphere(inicio, 0.15f);
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (raioPercepcao <= 0f || PontosRelativos().Length < 2)
+            {
+                return;
+            }
+
+            Vector2 centro = Application.isPlaying && corpo != null
+                ? corpo.position
+                : CriarRota(transform.position).Posicao;
+            centro += deslocamentoPercepcao;
+
+            const int segmentos = 48;
+            float raioVertical = RaioVerticalPercepcao;
+            float z = transform.position.z;
+            Vector3 anterior = new Vector3(centro.x + raioPercepcao, centro.y, z);
+            Gizmos.color = new Color(0.35f, 0.85f, 1f, 0.9f);
+            for (int i = 1; i <= segmentos; i++)
+            {
+                float anguloElipse = i * (2f * Mathf.PI / segmentos);
+                Vector3 ponto = new Vector3(
+                    centro.x + Mathf.Cos(anguloElipse) * raioPercepcao,
+                    centro.y + Mathf.Sin(anguloElipse) * raioVertical,
+                    z);
+                Gizmos.DrawLine(anterior, ponto);
+                anterior = ponto;
             }
         }
     }

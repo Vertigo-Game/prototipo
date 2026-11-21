@@ -7,6 +7,8 @@ namespace HookPrototype
     public sealed class HookTarget : MonoBehaviour
     {
         [SerializeField] private bool isEnemy;
+        [SerializeField, Tooltip("Impede que o gancho se prenda a este alvo, mantendo o perigo por contato.")]
+        private bool blockHook;
         [SerializeField]
         [Tooltip("Faz o jogador parar no centro do ponto ao chegar com o gancho.")]
         private bool stopAtAnchor;
@@ -18,6 +20,7 @@ namespace HookPrototype
         private bool keepHorizontalCaptureBounce;
 
         public bool IsEnemy => isEnemy;
+        public bool CanBeHooked => !blockHook;
         public bool StopsAtAnchor => !isEnemy && stopAtAnchor;
         public float VerticalCaptureBounceSpeed => verticalCaptureBounceSpeed;
         public bool KeepHorizontalCaptureBounce => keepHorizontalCaptureBounce;

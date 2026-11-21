@@ -151,6 +151,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HookPrototype.HookTarget
   isEnemy: 1
+  blockHook: 0
+  stopAtAnchor: 0
+  verticalCaptureBounceSpeed: 0
+  keepHorizontalCaptureBounce: 0
 --- !u!50 &5104713006
 Rigidbody2D:
   serializedVersion: 5
@@ -201,6 +205,10 @@ MonoBehaviour:
   progressoInicial: 0
   comecaVoltando: 0
   pausaNosExtremos: 0
+  pararAoSerFisgado: 1
+  raioPercepcao: 0
+  raioVerticalPercepcao: 0
+  deslocamentoPercepcao: {x: 0, y: 0}
 --- !u!114 &5104713008
 MonoBehaviour:
   m_ObjectHideFlags: 0

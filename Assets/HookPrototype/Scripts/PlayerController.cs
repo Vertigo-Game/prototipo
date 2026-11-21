@@ -1017,7 +1017,7 @@ namespace HookPrototype
                 }
 
                 HookTarget target = hit.collider.GetComponent<HookTarget>();
-                if (target == null)
+                if (target == null || !target.CanBeHooked)
                 {
                     continue;
                 }
@@ -1069,7 +1069,7 @@ namespace HookPrototype
                 sons.PararCameraLenta();
             }
 
-            if (currentTarget == null)
+            if (currentTarget == null || !currentTarget.CanBeHooked)
             {
                 aimLine.enabled = false;
                 return;
@@ -1101,7 +1101,7 @@ namespace HookPrototype
                 SetTimeScale(1f);
             }
 
-            if (currentTarget == null)
+            if (currentTarget == null || !currentTarget.CanBeHooked)
             {
                 CancelHook(false);
                 return;

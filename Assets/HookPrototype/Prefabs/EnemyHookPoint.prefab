@@ -148,6 +148,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HookPrototype.HookTarget
   isEnemy: 1
+  blockHook: 0
+  stopAtAnchor: 0
+  verticalCaptureBounceSpeed: 0
+  keepHorizontalCaptureBounce: 0
 --- !u!114 &1719568274
 MonoBehaviour:
   m_ObjectHideFlags: 0
