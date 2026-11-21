@@ -7,8 +7,13 @@ namespace HookPrototype
     public sealed class HookTarget : MonoBehaviour
     {
         [SerializeField] private bool isEnemy;
+        [SerializeField, Tooltip("Ligado: o jogador fica pendurado numa corda e balança (ponto móvel). Desligado: fica preso parado, pelas mãos (ponto fixo).")]
+        private bool swings;
 
         public bool IsEnemy => isEnemy;
+
+        /// <summary>Whether the player hangs from a rope and swings instead of being held still.</summary>
+        public bool Swings => swings;
 
         /// <summary>Raised when a launched hook connects to this target.</summary>
         public event Action Hooked;

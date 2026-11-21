@@ -81,7 +81,11 @@ namespace HookPrototype
         [SerializeField] private float momentumDeceleration = 14f;
         [SerializeField] private float momentumEndSpeed = 6f;
 
-        [Header("Balanço no ponto de ancoragem")]
+        [Header("Ponto fixo")]
+        [Tooltip("Preso num ponto fixo, quanto o centro do jogador fica abaixo do ponto: o ponto fica perto das mãos, na parte de cima do sprite.")]
+        [SerializeField] private float fixedHangOffset = 0.5f;
+
+        [Header("Balanço no ponto móvel")]
         [Tooltip("Distância do jogador ao ponto quando ele fica pendurado na corda.")]
         [SerializeField] private float swingRopeLength = 2.5f;
         [Tooltip("Aceleração horizontal ao segurar esquerda/direita pendurado.")]
@@ -1107,7 +1111,15 @@ namespace HookPrototype
 
             if (hanging)
             {
-                Swing(targetPosition);
+                if (currentTarget.Swings)
+                {
+                    Swing(targetPosition);
+                }
+                else
+                {
+                    Hold(targetPosition);
+                }
+
                 return;
             }
 
@@ -1117,8 +1129,8 @@ namespace HookPrototype
             aimLine.SetPosition(0, body.position);
             aimLine.SetPosition(1, targetPosition);
 
-            // Num ponto de ancoragem o jogador para na distância da corda, não em cima do ponto.
-            float reachDistance = currentTarget.IsEnemy ? targetReachDistance : Mathf.Max(targetReachDistance, swingRopeLength);
+            // Num ponto que balança o jogador para na distância da corda; nos outros, chega até o ponto.
+            float reachDistance = currentTarget.Swings ? Mathf.Max(targetReachDistance, swingRopeLength) : targetReachDistance;
             if (distance <= reachDistance)
             {
                 ReachTarget();
@@ -1169,17 +1181,36 @@ namespace HookPrototype
                 pulling = true;
                 dashAvailable = true; // agarrar o ponto devolve o dash, para poder sair dele com dash
                 currentTarget = reachedTarget;
-                body.gravityScale = baseGravityScale;
                 aimLine.enabled = true;
+                Vector2 anchor = reachedTarget.transform.position;
+
+                if (!reachedTarget.Swings)
+                {
+                    // Ponto fixo: fica preso parado, pendurado pelas mãos.
+                    body.gravityScale = 0f;
+                    Hold(anchor);
+                    return;
+                }
+
+                body.gravityScale = baseGravityScale;
 
                 // Começa a balançar: a velocidade do puxão não some, é desviada para a direção do balanço.
-                Vector2 anchor = reachedTarget.transform.position;
                 Vector2 toBody = body.position - anchor;
                 swingLength = Mathf.Clamp(toBody.magnitude, targetReachDistance, swingRopeLength);
                 Vector2 radial = toBody.sqrMagnitude > 0.0001f ? toBody.normalized : Vector2.down;
                 body.linearVelocity = SwingEntryVelocity(incomingVelocity, radial);
                 lastAnchorPosition = anchor;
             }
+        }
+
+        // Ponto fixo: o jogador fica parado logo abaixo do ponto, com o ponto na altura das mãos.
+        // Se o ponto andar, o jogador vai junto.
+        private void Hold(Vector2 anchor)
+        {
+            body.position = anchor + Vector2.down * fixedHangOffset;
+            body.linearVelocity = Vector2.zero;
+            aimLine.SetPosition(0, anchor);
+            aimLine.SetPosition(1, anchor);
         }
 
         // Mantém a intensidade da velocidade do puxão (até o máximo do balanço) e a gira para ficar
@@ -1242,7 +1273,7 @@ namespace HookPrototype
 
             if (wasHanging)
             {
-                // Soltar a corda balançando mantém a velocidade do balanço.
+                // Soltar a corda balançando mantém a velocidade do balanço; preso num ponto fixo ela já é zero.
                 return;
             }
 
