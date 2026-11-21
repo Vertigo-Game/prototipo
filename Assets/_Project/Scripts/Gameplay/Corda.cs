@@ -40,7 +40,7 @@ namespace Vertigo.Gameplay
 
         private void Start()
         {
-            jogador = FindFirstObjectByType<PlayerController>();
+            jogador = FindAnyObjectByType<PlayerController>();
         }
 
         private void Update()

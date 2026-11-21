@@ -24,11 +24,25 @@ namespace HookPrototype
 
         [Header("Empurrão")]
         [Tooltip("Aceleração na direção do vento em unidades/s². Zero desliga o vento.")]
-        [SerializeField, Min(0f)] private float strength = 30f;
+        [SerializeField, Min(0f)] private float strength = 15f;
         [Tooltip("Velocidade mínima na direção do vento ao entrar na área. Zero remove o lançamento inicial.")]
-        [SerializeField, Min(0f)] private float launchSpeed = 10f;
+        [SerializeField, Min(0f)] private float launchSpeed = 1f;
         [Tooltip("Velocidade máxima na direção do vento. Não freia um jogador que já esteja mais rápido na mesma direção.")]
-        [SerializeField, Min(0.1f)] private float maxSpeed = 30f;
+        [SerializeField, Min(0.1f)] private float maxSpeed = 7f;
+
+        [Header("Intermitência (vento que para e volta)")]
+        [Tooltip("Ligado: o vento sopra por um tempo, para por outro e repete. Desligado: sopra sempre.")]
+        [SerializeField] private bool intermitente;
+        [Tooltip("Segundos soprando em cada ciclo.")]
+        [SerializeField, Min(0.1f)] private float tempoLigado = 3f;
+        [Tooltip("Segundos parado em cada ciclo.")]
+        [SerializeField, Min(0.1f)] private float tempoDesligado = 2f;
+        [Tooltip("Desloca o começo do ciclo, em segundos, para vários ventos não ligarem e desligarem juntos. O ciclo reinicia junto com a cena.")]
+        [SerializeField, Min(0f)] private float atraso;
+        [Tooltip("Segundos que as linhas levam para aparecer quando o vento liga (fade in).")]
+        [SerializeField, Min(0.01f)] private float transicaoVisual = 0.4f;
+        [Tooltip("Segundos que as linhas levam para sumir quando o vento desliga (fade out). As linhas continuam correndo enquanto somem.")]
+        [SerializeField, Min(0.01f)] private float fadeOutAoDesligar = 1f;
 
         [Header("Linhas de vento")]
         [SerializeField] private Material lineMaterial;
@@ -42,7 +56,9 @@ namespace HookPrototype
         [SerializeField] private int sortingOrder = 8;
         [Tooltip("Resolução da grade visual. Valores menores produzem pixels maiores.")]
         [SerializeField, Range(1, 64)] private int pixelsPerUnit = 16;
-        [Tooltip("Distância, em unidades do mundo, em que as linhas desaparecem antes do fim da área.")]
+        [Tooltip("Distância, em unidades do mundo, em que as linhas surgem aos poucos depois do começo da área (fade in).")]
+        [SerializeField, Min(0.1f)] private float fadeInDistance = 2f;
+        [Tooltip("Distância, em unidades do mundo, em que as linhas desaparecem antes do fim da área (fade out).")]
         [SerializeField, Min(0.1f)] private float fadeOutDistance = 2f;
 
         private static readonly HashSet<WindArea> ActiveAreas = new HashSet<WindArea>();
@@ -53,6 +69,18 @@ namespace HookPrototype
         private readonly List<int> triangles = new List<int>();
         private Material fallbackMaterial;
         private float animationTime;
+        private float visualIntensity = -1f;
+
+        /// <summary>False enquanto um vento intermitente está parado: sem empurrão e sem linhas.</summary>
+        public bool Soprando
+        {
+            get
+            {
+                if (!intermitente) return true;
+                float ciclo = tempoLigado + tempoDesligado;
+                return Mathf.Repeat(Time.timeSinceLevelLoad + atraso, ciclo) < tempoLigado;
+            }
+        }
 
         public Vector2 Direction => origin switch
         {
@@ -130,7 +158,7 @@ namespace HookPrototype
             previousAreas.IntersectWith(ActiveAreas);
             foreach (WindArea area in ActiveAreas)
             {
-                if (area == null || !area.isActiveAndEnabled || area.strength <= 0f ||
+                if (area == null || !area.isActiveAndEnabled || area.strength <= 0f || !area.Soprando ||
                     area.gameObject.scene != playerCollider.gameObject.scene || !area.TryGetArea(out Rect rect))
                 {
                     previousAreas.Remove(area);
@@ -176,6 +204,18 @@ namespace HookPrototype
                 return;
             }
 
+            // As linhas aparecem e somem aos poucos quando o vento liga e desliga.
+            float alvoVisual = Soprando ? 1f : 0f;
+            float duracaoVisual = Soprando ? transicaoVisual : fadeOutAoDesligar;
+            visualIntensity = visualIntensity < 0f
+                ? alvoVisual
+                : Mathf.MoveTowards(visualIntensity, alvoVisual, Time.deltaTime / Mathf.Max(0.01f, duracaoVisual));
+            if (visualIntensity <= 0f)
+            {
+                SetVisualVisible(false);
+                return;
+            }
+
             if (visualRenderer == null)
             {
                 CreateVisual();
@@ -191,7 +231,8 @@ namespace HookPrototype
             bool horizontal = direction.x != 0f;
             float span = horizontal ? area.width : area.height;
             float crossSpan = horizontal ? area.height : area.width;
-            float fadeDistance = Mathf.Min(Mathf.Max(pixelSize, fadeOutDistance), span);
+            float fadeInLength = Mathf.Min(Mathf.Max(pixelSize, fadeInDistance), span);
+            float fadeOutLength = Mathf.Min(Mathf.Max(pixelSize, fadeOutDistance), span);
             Matrix4x4 worldToLocal = transform.worldToLocalMatrix;
             for (int i = 0; i < lineCount; i++)
             {
@@ -222,10 +263,10 @@ namespace HookPrototype
                     float pixelHeight = horizontal ? thickness : pixelSize;
                     if (x < area.xMin || x + pixelWidth > area.xMax || y < area.yMin || y + pixelHeight > area.yMax) continue;
 
-                    float fadeOut = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((span - distance) / fadeDistance));
-                    float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(distance / Mathf.Min(pixelSize * 3f, span)));
+                    float fadeOut = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((span - distance) / fadeOutLength));
+                    float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(distance / fadeInLength));
                     Color tint = color;
-                    tint.a *= fadeIn * fadeOut * Mathf.Lerp(0.25f, 1f, t);
+                    tint.a *= fadeIn * fadeOut * Mathf.Lerp(0.25f, 1f, t) * Mathf.SmoothStep(0f, 1f, visualIntensity);
                     if (tint.a < 1f / 255f) continue;
                     AddPixel(x, y, pixelWidth, pixelHeight, tint, worldToLocal);
                 }
@@ -301,6 +342,11 @@ namespace HookPrototype
             maxSpeed = Mathf.Max(0.1f, maxSpeed);
             lineCount = Mathf.Clamp(lineCount, 1, 80);
             pixelsPerUnit = Mathf.Clamp(pixelsPerUnit, 1, 64);
+            tempoLigado = Mathf.Max(0.1f, tempoLigado);
+            tempoDesligado = Mathf.Max(0.1f, tempoDesligado);
+            transicaoVisual = Mathf.Max(0.01f, transicaoVisual);
+            fadeOutAoDesligar = Mathf.Max(0.01f, fadeOutAoDesligar);
+            fadeInDistance = Mathf.Max(0.1f, fadeInDistance);
             fadeOutDistance = Mathf.Max(0.1f, fadeOutDistance);
         }
 

@@ -10,8 +10,8 @@ namespace HookPrototype
         [SerializeField, Tooltip("Impede que o gancho se prenda a este alvo, mantendo o perigo por contato.")]
         private bool blockHook;
         [SerializeField]
-        [Tooltip("Faz o jogador parar no centro do ponto ao chegar com o gancho.")]
-        private bool stopAtAnchor;
+        [Tooltip("Ligado (padrão): o jogador fica preso parado no ponto, pelas mãos. Desligado: fica pendurado numa corda e balança.")]
+        private bool stopAtAnchor = true;
         [SerializeField, Min(0f)]
         [Tooltip("Velocidade vertical ao capturar este inimigo. Zero usa a velocidade normal do jogador.")]
         private float verticalCaptureBounceSpeed;

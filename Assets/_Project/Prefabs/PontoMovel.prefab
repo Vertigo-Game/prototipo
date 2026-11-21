@@ -164,6 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HookPrototype.HookTarget
   isEnemy: 0
+  stopAtAnchor: 1
 --- !u!50 &1494477690
 Rigidbody2D:
   serializedVersion: 5

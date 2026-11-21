@@ -81,7 +81,11 @@ namespace HookPrototype
         [SerializeField] private float momentumDeceleration = 14f;
         [SerializeField] private float momentumEndSpeed = 6f;
 
-        [Header("Balanço no ponto de ancoragem")]
+        [Header("Ponto que segura (Stop At Anchor ligado)")]
+        [Tooltip("Preso num ponto, quanto o centro do jogador fica abaixo dele: o ponto fica perto das mãos, na parte de cima do sprite. Zero prende pelo centro.")]
+        [SerializeField] private float fixedHangOffset = 0.5f;
+
+        [Header("Balanço (Stop At Anchor desligado)")]
         [Tooltip("Distância do jogador ao ponto quando ele fica pendurado na corda.")]
         [SerializeField] private float swingRopeLength = 2.5f;
         [Tooltip("Aceleração horizontal ao segurar esquerda/direita pendurado.")]
@@ -1213,9 +1217,11 @@ namespace HookPrototype
             }
         }
 
+        // Ponto que segura: o jogador fica parado logo abaixo do ponto, com o ponto na altura das mãos
+        // (Fixed Hang Offset). Se o ponto andar, o jogador vai junto.
         private void HoldAtAnchor(Vector2 anchor)
         {
-            body.position = anchor;
+            body.position = anchor + Vector2.down * fixedHangOffset;
             body.linearVelocity = Vector2.zero;
         }
 
