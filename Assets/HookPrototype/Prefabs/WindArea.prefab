@@ -47,9 +47,15 @@ MonoBehaviour:
   origin: 0
   width: 10
   height: 3
-  strength: 60
-  launchSpeed: 14
-  maxSpeed: 30
+  strength: 15
+  launchSpeed: 1
+  maxSpeed: 7
+  intermitente: 0
+  tempoLigado: 3
+  tempoDesligado: 2
+  atraso: 0
+  transicaoVisual: 0.4
+  fadeOutAoDesligar: 1
   lineMaterial: {fileID: 2100000, guid: 469f8d93acd217649b4bf092ad996cb6, type: 2}
   lineCount: 24
   color: {r: 0.8, g: 0.95, b: 1, a: 0.55}
