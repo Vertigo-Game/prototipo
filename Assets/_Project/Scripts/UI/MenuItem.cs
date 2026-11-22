@@ -15,7 +15,7 @@ namespace Vertigo.UI
         [SerializeField] private MonoBehaviour menu;
         [SerializeField] private int indice;
 
-        private IMenuVertical Menu => menu as IMenuVertical;
+        private IMenuVertical Menu => menu != null ? menu as IMenuVertical : GetComponentInParent<IMenuVertical>();
 
         public void OnPointerEnter(PointerEventData eventData)
         {

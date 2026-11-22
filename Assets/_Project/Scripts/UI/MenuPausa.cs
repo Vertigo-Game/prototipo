@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using HookPrototype;
 using TMPro;
 using UnityEngine;
@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 namespace Vertigo.UI
 {
-    // Esc (ou Start) pausa e abre o menu: 0 = Continuar, 1 = Tela inicial.
+    // Esc/Start permanece disponível depois de remapear os controles do jogo.
+    [DefaultExecutionOrder(-100)]
     public sealed class MenuPausa : MonoBehaviour, IMenuVertical
     {
         [SerializeField] private GameObject painel;
@@ -17,6 +18,12 @@ namespace Vertigo.UI
         [SerializeField] private Color corNormal = new Color32(0xEE, 0xF2, 0xF6, 0xFF);
         [SerializeField] private Color corSelecionada = new Color32(0xF2, 0x99, 0x4A, 0xFF);
         [SerializeField] private float intervaloPiscarMarcador = 0.5f;
+
+        [Header("Controles")]
+        [SerializeField] private GameObject painelControles;
+        [SerializeField] private TMP_Text[] itensControles;
+        [SerializeField] private TMP_Text marcadorControles;
+        [SerializeField] private TMP_Text mensagemControles;
 
         [Header("Transição")]
         [SerializeField] private Image fade;
@@ -28,144 +35,149 @@ namespace Vertigo.UI
         [SerializeField] private CaixaDeTexto caixa;
 
         private float escalaDeTempoAnterior = 1f;
+        private bool entradaBloqueadaAnterior;
+        private bool cursorVisivelAnterior;
+        private CursorLockMode cursorAnterior;
         private int selecionado;
         private bool saindo;
+        private bool controles;
+        private RemapeamentoControles remapeamento;
         private float tempoPiscar;
-        private int frameAberto = -1;
+        private int frameAcao = -1;
 
         public bool Aberto { get; private set; }
+        private bool Remapeando => controles && remapeamento.AguardandoTecla;
+        private TMP_Text[] ItensAtuais => controles ? itensControles : itens;
+        private TMP_Text MarcadorAtual => controles ? marcadorControles : marcador;
 
         private void Awake()
         {
             painel.SetActive(false);
-            if (fade != null)
+            if (painelControles != null)
             {
-                fade.color = new Color(0f, 0f, 0f, 0f);
-                fade.raycastTarget = false;
+                painelControles.SetActive(false);
+                remapeamento = new RemapeamentoControles(itensControles, mensagemControles);
             }
+            if (fade == null) return;
+            fade.color = Color.clear;
+            fade.raycastTarget = false;
         }
 
         private void Update()
         {
-            if (saindo)
-            {
-                return;
-            }
-
+            if (saindo) return;
             if (!Aberto)
             {
                 bool caixaOcupada = caixa != null && (caixa.Aberta || caixa.FrameFechada == Time.frameCount);
-                if (!caixaOcupada && MenuInput.PausePressed())
-                {
-                    Abrir();
-                }
+                if (!caixaOcupada && jogador != null && !jogador.IsDead && MenuInput.PausePressed()) Abrir();
                 return;
             }
-
-            if (frameAberto == Time.frameCount)
-            {
-                return;
-            }
-
+            if (frameAcao == Time.frameCount) return;
             if (MenuInput.PausePressed())
             {
-                Fechar();
+                if (Remapeando) remapeamento.Cancelar();
+                else if (controles) MostrarMenu();
+                else Fechar();
                 return;
             }
-
-            if (MenuInput.UpPressed())
+            if (Remapeando)
             {
-                Selecionar((selecionado - 1 + itens.Length) % itens.Length);
-            }
-            else if (MenuInput.DownPressed())
-            {
-                Selecionar((selecionado + 1) % itens.Length);
-            }
-            else if (MenuInput.ConfirmPressed())
-            {
-                Confirmar(selecionado);
+                remapeamento.LerEntrada();
                 return;
             }
+            if (MenuInput.UpPressed()) Selecionar((selecionado - 1 + ItensAtuais.Length) % ItensAtuais.Length);
+            else if (MenuInput.DownPressed()) Selecionar((selecionado + 1) % ItensAtuais.Length);
+            else if (MenuInput.ConfirmPressed()) { Confirmar(selecionado); return; }
 
             tempoPiscar += Time.unscaledDeltaTime;
-            if (tempoPiscar >= intervaloPiscarMarcador)
-            {
-                tempoPiscar = 0f;
-                marcador.enabled = !marcador.enabled;
-            }
+            if (tempoPiscar < intervaloPiscarMarcador) return;
+            tempoPiscar = 0f;
+            MarcadorAtual.enabled = !MarcadorAtual.enabled;
         }
 
-        private void Abrir()
+        public void Abrir()
         {
+            if (Aberto || saindo) return;
             Aberto = true;
-            frameAberto = Time.frameCount;
             escalaDeTempoAnterior = Time.timeScale;
+            entradaBloqueadaAnterior = jogador != null && jogador.InputLocked;
+            cursorVisivelAnterior = Cursor.visible;
+            cursorAnterior = Cursor.lockState;
             Time.timeScale = 0f;
-            if (jogador != null)
-            {
-                jogador.InputLocked = true;
-            }
+            if (jogador != null) jogador.InputLocked = true;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            MostrarMenu();
+        }
 
+        public void Fechar()
+        {
+            if (!Aberto || saindo) return;
+            Aberto = false;
+            controles = false;
+            painel.SetActive(false);
+            if (painelControles != null) painelControles.SetActive(false);
+            Time.timeScale = escalaDeTempoAnterior;
+            if (jogador != null) jogador.InputLocked = entradaBloqueadaAnterior;
+            Cursor.lockState = cursorAnterior;
+            Cursor.visible = cursorVisivelAnterior;
+        }
+
+        private void OnDisable()
+        {
+            if (Aberto && !saindo) Fechar();
+        }
+
+        private void MostrarMenu()
+        {
+            controles = false;
+            if (painelControles != null) painelControles.SetActive(false);
             painel.SetActive(true);
+            frameAcao = Time.frameCount;
             Selecionar(0);
         }
 
-        private void Fechar()
+        private void MostrarControles()
         {
-            Aberto = false;
+            controles = true;
             painel.SetActive(false);
-            Time.timeScale = escalaDeTempoAnterior;
-            if (jogador != null)
-            {
-                jogador.InputLocked = false;
-            }
+            painelControles.SetActive(true);
+            frameAcao = Time.frameCount;
+            remapeamento.Abrir();
+            Selecionar(0);
         }
 
         public void Selecionar(int indice)
         {
-            if (!Aberto || saindo || indice < 0 || indice >= itens.Length)
-            {
-                return;
-            }
-
+            if (!Aberto || saindo || Remapeando || indice < 0 || indice >= ItensAtuais.Length) return;
             selecionado = indice;
-            for (int i = 0; i < itens.Length; i++)
-            {
-                itens[i].color = i == selecionado ? corSelecionada : corNormal;
-            }
-
-            marcador.rectTransform.anchoredPosition =
-                itens[selecionado].rectTransform.anchoredPosition + Vector2.left * distanciaMarcador;
-            marcador.color = corSelecionada;
-            marcador.enabled = true;
+            for (int i = 0; i < ItensAtuais.Length; i++) ItensAtuais[i].color = i == indice ? corSelecionada : corNormal;
+            MarcadorAtual.rectTransform.anchoredPosition = ItensAtuais[indice].rectTransform.anchoredPosition + Vector2.left * distanciaMarcador;
+            MarcadorAtual.color = corSelecionada;
+            MarcadorAtual.enabled = true;
             tempoPiscar = 0f;
         }
 
         public void Confirmar(int indice)
         {
-            if (!Aberto || saindo)
-            {
-                return;
-            }
-
+            if (!Aberto || saindo || Remapeando || indice < 0 || indice >= ItensAtuais.Length) return;
             Selecionar(indice);
-            if (indice == 0)
+            if (controles)
             {
-                Fechar();
+                if (remapeamento.Confirmar(indice)) MostrarMenu();
+                frameAcao = Time.frameCount;
             }
-            else
-            {
-                StartCoroutine(FadeEVoltar());
-            }
+            else if (indice == 0) Fechar();
+            else if (indice == 1 && painelControles != null) MostrarControles();
+            else StartCoroutine(FadeEVoltar());
         }
 
         private IEnumerator FadeEVoltar()
         {
             saindo = true;
-            marcador.enabled = true;
-
             if (fade != null)
             {
+                fade.transform.SetAsLastSibling();
                 fade.raycastTarget = true;
                 for (float t = 0f; t < duracaoFade; t += Time.unscaledDeltaTime)
                 {
@@ -174,9 +186,10 @@ namespace Vertigo.UI
                 }
                 fade.color = Color.black;
             }
-
             Time.timeScale = 1f;
             Time.fixedDeltaTime = 0.02f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             SceneManager.LoadScene(cenaTelaInicial);
         }
     }
