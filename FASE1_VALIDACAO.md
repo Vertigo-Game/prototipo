@@ -20,6 +20,10 @@ O jogo terá três fases. A primeira fica em uma cena nova, `Fase1_Validacao.uni
 
 ## Validação no Unity
 
-Abra `Assets/_Project/Scenes/Fase1_Validacao.unity` e aperte Play. Com essa cena aberta, o Play começa direto nela, sem passar pela tela inicial.
+Abra `Assets/_Project/Scenes/Fase1_Validacao.unity` e aperte Play. Com **Vertigo → Play começa pela tela inicial** marcado, escolha **Jogar** para entrar na Fase 1. Para testar a fase direto, desmarque essa opção ou use **Pular menu inicial** com o modo teste ativo.
+
+Na tela inicial ou na pausa da fase, escolha **Controles** para remapear uma ação do teclado ou do mouse. As alterações são aplicadas ao jogo e ficam salvas. Use **Restaurar** para voltar aos controles padrão.
+
+Durante a fase, pressione **Esc** ou **Start** para abrir a pausa e escolher **Continuar**, **Controles** ou **Tela inicial**.
 
 No playtest, conferir os pulos e o dash do início, a descida até o checkpoint e o gancho, o retorno ao checkpoint com o gancho depois de uma morte, a travessia das pedras, o impulso do inimigo até a caverna e o caminho a pé até a fogueira final.

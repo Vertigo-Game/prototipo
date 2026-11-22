@@ -4,7 +4,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Vertigo.Gameplay;
 
 namespace Vertigo.UI
 {
@@ -42,18 +41,23 @@ namespace Vertigo.UI
         private int selecionado;
         private bool saindo;
         private bool controles;
-        private int remapeando = -1;
+        private RemapeamentoControles remapeamento;
         private float tempoPiscar;
         private int frameAcao = -1;
 
         public bool Aberto { get; private set; }
+        private bool Remapeando => controles && remapeamento.AguardandoTecla;
         private TMP_Text[] ItensAtuais => controles ? itensControles : itens;
         private TMP_Text MarcadorAtual => controles ? marcadorControles : marcador;
 
         private void Awake()
         {
             painel.SetActive(false);
-            painelControles.SetActive(false);
+            if (painelControles != null)
+            {
+                painelControles.SetActive(false);
+                remapeamento = new RemapeamentoControles(itensControles, mensagemControles);
+            }
             if (fade == null) return;
             fade.color = Color.clear;
             fade.raycastTarget = false;
@@ -71,24 +75,14 @@ namespace Vertigo.UI
             if (frameAcao == Time.frameCount) return;
             if (MenuInput.PausePressed())
             {
-                if (remapeando >= 0)
-                {
-                    remapeando = -1;
-                    AtualizarControles("Alteração cancelada.");
-                }
+                if (Remapeando) remapeamento.Cancelar();
                 else if (controles) MostrarMenu();
                 else Fechar();
                 return;
             }
-            if (remapeando >= 0)
+            if (Remapeando)
             {
-                string caminho = ControlesJogo.LerNovaTecla();
-                if (caminho != null)
-                {
-                    if (ControlesJogo.Remapear(remapeando, caminho, out string mensagem)) remapeando = -1;
-                    AtualizarControles(mensagem);
-                    frameAcao = Time.frameCount;
-                }
+                remapeamento.LerEntrada();
                 return;
             }
             if (MenuInput.UpPressed()) Selecionar((selecionado - 1 + ItensAtuais.Length) % ItensAtuais.Length);
@@ -120,9 +114,9 @@ namespace Vertigo.UI
         {
             if (!Aberto || saindo) return;
             Aberto = false;
-            remapeando = -1;
+            controles = false;
             painel.SetActive(false);
-            painelControles.SetActive(false);
+            if (painelControles != null) painelControles.SetActive(false);
             Time.timeScale = escalaDeTempoAnterior;
             if (jogador != null) jogador.InputLocked = entradaBloqueadaAnterior;
             Cursor.lockState = cursorAnterior;
@@ -137,8 +131,7 @@ namespace Vertigo.UI
         private void MostrarMenu()
         {
             controles = false;
-            remapeando = -1;
-            painelControles.SetActive(false);
+            if (painelControles != null) painelControles.SetActive(false);
             painel.SetActive(true);
             frameAcao = Time.frameCount;
             Selecionar(0);
@@ -150,21 +143,13 @@ namespace Vertigo.UI
             painel.SetActive(false);
             painelControles.SetActive(true);
             frameAcao = Time.frameCount;
-            AtualizarControles("Selecione uma ação e pressione a nova tecla. Esc cancela.");
+            remapeamento.Abrir();
             Selecionar(0);
-        }
-
-        private void AtualizarControles(string mensagem)
-        {
-            for (int i = 0; i < ControlesJogo.Quantidade; i++)
-                itensControles[i].text = ControlesJogo.Nome(i) + "<pos=240><color=#8F9CB5>" +
-                    (i == remapeando ? "[ pressione uma tecla ]" : ControlesJogo.Tecla(i)) + "</color>";
-            mensagemControles.text = mensagem;
         }
 
         public void Selecionar(int indice)
         {
-            if (!Aberto || saindo || remapeando >= 0 || indice < 0 || indice >= ItensAtuais.Length) return;
+            if (!Aberto || saindo || Remapeando || indice < 0 || indice >= ItensAtuais.Length) return;
             selecionado = indice;
             for (int i = 0; i < ItensAtuais.Length; i++) ItensAtuais[i].color = i == indice ? corSelecionada : corNormal;
             MarcadorAtual.rectTransform.anchoredPosition = ItensAtuais[indice].rectTransform.anchoredPosition + Vector2.left * distanciaMarcador;
@@ -175,25 +160,15 @@ namespace Vertigo.UI
 
         public void Confirmar(int indice)
         {
-            if (!Aberto || saindo || remapeando >= 0 || indice < 0 || indice >= ItensAtuais.Length) return;
+            if (!Aberto || saindo || Remapeando || indice < 0 || indice >= ItensAtuais.Length) return;
             Selecionar(indice);
             if (controles)
             {
-                if (indice < ControlesJogo.Quantidade)
-                {
-                    remapeando = indice;
-                    frameAcao = Time.frameCount;
-                    AtualizarControles("Pressione uma tecla ou botão do mouse. Esc cancela.");
-                }
-                else if (indice == ControlesJogo.Quantidade)
-                {
-                    ControlesJogo.Restaurar();
-                    AtualizarControles("Controles padrão restaurados.");
-                }
-                else MostrarMenu();
+                if (remapeamento.Confirmar(indice)) MostrarMenu();
+                frameAcao = Time.frameCount;
             }
             else if (indice == 0) Fechar();
-            else if (indice == 1) MostrarControles();
+            else if (indice == 1 && painelControles != null) MostrarControles();
             else StartCoroutine(FadeEVoltar());
         }
 

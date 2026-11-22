@@ -1,10 +1,16 @@
 namespace Vertigo.Gameplay
 {
-    /// <summary>Preferências locais do editor, independentes do estado salvo nas cenas.</summary>
+    /// <summary>Preferências e estado da sessão do editor, independentes das cenas salvas.</summary>
     public static class ModoTeste
     {
 #if UNITY_EDITOR
         private static string Prefixo => "Vertigo.ModoTeste." + UnityEngine.Application.dataPath + ".";
+
+        public static string CenaDoJogoNoEditor
+        {
+            get => UnityEditor.SessionState.GetString(Prefixo + "CenaDoJogoNoEditor", string.Empty);
+            set => UnityEditor.SessionState.SetString(Prefixo + "CenaDoJogoNoEditor", value);
+        }
 
         public static bool Ativo
         {

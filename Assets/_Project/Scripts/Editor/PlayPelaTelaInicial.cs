@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
@@ -12,17 +13,23 @@ namespace Vertigo.EditorTools
     {
         private const string CaminhoMenu = "Vertigo/Play começa pela tela inicial";
         private const string Chave = "Vertigo.PlayPelaTelaInicial";
+        private const string CaminhoFase1 = "Assets/_Project/Scenes/Fase1_Validacao.unity";
 
         static PlayPelaTelaInicial()
         {
             EditorApplication.delayCall += Aplicar;
-            EditorApplication.playModeStateChanged += estado =>
-            {
-                if (estado == PlayModeStateChange.ExitingEditMode)
-                {
-                    Aplicar();
-                }
-            };
+            EditorApplication.playModeStateChanged += AoMudarModoDeJogo;
+        }
+
+        private static void AoMudarModoDeJogo(PlayModeStateChange estado)
+        {
+            if (estado != PlayModeStateChange.ExitingEditMode) return;
+
+            string cenaAtual = SceneManager.GetActiveScene().path;
+            ModoTeste.CenaDoJogoNoEditor = cenaAtual == CaminhoFase1
+                ? Path.GetFileNameWithoutExtension(cenaAtual)
+                : string.Empty;
+            Aplicar();
         }
 
         [MenuItem(CaminhoMenu)]
@@ -43,12 +50,6 @@ namespace Vertigo.EditorTools
         {
             // Preferência do editor: continua valendo após R, Stop/Play e recarga de scripts.
             string cenaAtual = SceneManager.GetActiveScene().path;
-            if (cenaAtual == "Assets/_Project/Scenes/Fase1_Validacao.unity")
-            {
-                EditorSceneManager.playModeStartScene = null;
-                return;
-            }
-
             if (ModoTeste.Ativo && ModoTeste.PularMenuInicial)
             {
                 bool estaNoMenu = cenaAtual == "Assets/_Project/Scenes/TelaInicial.unity";
