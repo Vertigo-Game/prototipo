@@ -129,6 +129,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d41e0b93c5a4f68a2b1c9e5d3f60a84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Gameplay.Fogueira
+  comecaAcesa: 0
+  raioCalor: 3
+  final: 0
+  musicaFinal: {fileID: 8300000, guid: 892d1b0cd4430df4e9c3cf36b144a9d3, type: 3}
+  sonsBrilhinhos:
+  - {fileID: 8300000, guid: ee56bb791bf13b44180a0ea0911cfd6d, type: 3}
+  checkpoint: 0
+  pontoRenascer: {x: 1.2, y: 0.5}
+  aviso: {fileID: 0}
+  deslocamentoAviso: {x: 0, y: 1.25}
+  duracaoFadeAviso: 0.25
 --- !u!61 &304645145330448657
 BoxCollider2D:
   m_ObjectHideFlags: 0
