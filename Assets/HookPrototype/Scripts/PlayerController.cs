@@ -176,6 +176,10 @@ namespace HookPrototype
         private bool corpseFrozen;
 
         public bool IsDead => dead;
+
+        // Running on the ground (drives the footstep dust). airTime comes from the physics step: zero = standing on something.
+        public bool IsRunningOnGround => !dead && !completed && !climbing && !pulling && airTime <= 0f &&
+                                         Mathf.Abs(body.linearVelocity.x) > 1f;
         public bool CanGrabRope => !dead && !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f &&
                                    Time.time - ropeReleaseTime >= ropeRegrabDelay;
         public Bounds BodyBounds => bodyCollider.bounds;
@@ -325,6 +329,12 @@ namespace HookPrototype
             aimLine.material = aimMaterial;
             aimLine.enabled = false;
             CreateCableMaterial();
+
+            // The player is placed straight into each scene (no prefab), so the dust comes with default values.
+            if (!TryGetComponent(out PoeiraPassos _))
+            {
+                gameObject.AddComponent<PoeiraPassos>();
+            }
         }
 
         private void OnDestroy()
