@@ -14,6 +14,7 @@ namespace Vertigo.EditorTools
         private const string CaminhoMenu = "Vertigo/Play começa pela tela inicial";
         private const string Chave = "Vertigo.PlayPelaTelaInicial";
         private const string CaminhoFase1 = "Assets/_Project/Scenes/Fase1_Validacao.unity";
+        private const string CaminhoGeada = "Assets/_Project/Scenes/PassagemDaGeada.unity";
 
         static PlayPelaTelaInicial()
         {
@@ -26,7 +27,7 @@ namespace Vertigo.EditorTools
             if (estado != PlayModeStateChange.ExitingEditMode) return;
 
             string cenaAtual = SceneManager.GetActiveScene().path;
-            ModoTeste.CenaDoJogoNoEditor = cenaAtual == CaminhoFase1
+            ModoTeste.CenaDoJogoNoEditor = cenaAtual == CaminhoFase1 || cenaAtual == CaminhoGeada
                 ? Path.GetFileNameWithoutExtension(cenaAtual)
                 : string.Empty;
             Aplicar();
