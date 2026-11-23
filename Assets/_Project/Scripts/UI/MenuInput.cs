@@ -47,6 +47,16 @@ namespace Vertigo.UI
 #endif
         }
 
+        public static bool BackPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                   (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+#else
+            return Input.GetKeyDown(KeyCode.Escape);
+#endif
+        }
+
         public static bool PausePressed()
         {
 #if ENABLE_INPUT_SYSTEM

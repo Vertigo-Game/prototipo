@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Vertigo.Gameplay;
 
 namespace Vertigo.UI
 {
@@ -65,7 +66,7 @@ namespace Vertigo.UI
 
         private void Update()
         {
-            if (saindo) return;
+            if (saindo || TransicaoDeFase.EmAndamento) return;
             if (!Aberto)
             {
                 bool caixaOcupada = caixa != null && (caixa.Aberta || caixa.FrameFechada == Time.frameCount);

@@ -173,8 +173,9 @@ namespace Vertigo.Gameplay
             Ativa = true;
             if (jogador != null)
             {
-                // O Marcos fica sentado, sem responder, até a tela de finalização.
+                // A interação encerra a fase; a tela de finalização só aparece depois da aurora.
                 jogador.InputLocked = true;
+                jogador.CompletePrototype();
             }
 
             CriarDesenho();
@@ -397,7 +398,6 @@ namespace Vertigo.Gameplay
             if (jogador != null)
             {
                 jogador.InputLocked = false;
-                jogador.CompletePrototype();
             }
         }
 
