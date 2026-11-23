@@ -10,7 +10,7 @@ namespace Vertigo.Gameplay
     // Fogueira acende com E quando o Marcos está no alcance (trigger) e parado no chão.
     // A sequência apagada -> acendendo -> acesa em loop fica toda no Animator.
     // Acesa, aquece quem estiver dentro do raio de calor (ver BarraDeFrio).
-    // No modo final (fogueira do topo), depois de acesa um segundo E reinicia o loop.
+    // No modo final (fogueira do topo), sentar nela inicia o final: aurora boreal e tela de finalização (AuroraFinal).
     // Marcada como checkpoint, acendê-la guarda o lugar: morrendo (ou com R) o Marcos renasce ao lado dela, já acesa.
     [RequireComponent(typeof(Collider2D), typeof(Animator))]
     public sealed class Fogueira : MonoBehaviour
@@ -27,8 +27,12 @@ namespace Vertigo.Gameplay
         [SerializeField] private float raioCalor = 3f;
 
         [Header("Fogueira final (topo)")]
-        [Tooltip("Depois de acesa, um segundo E reinicia o jogo.")]
+        [Tooltip("Fim do jogo: ao sentar, a aurora boreal cobre a tela e aparece a tela de finalização.")]
         [SerializeField] private bool final;
+        [Tooltip("Música do final: toca ao sentar, com fade in, enquanto a que estava tocando some com fade out.")]
+        [SerializeField] private AudioClip musicaFinal;
+        [Tooltip("Sons de brilho da aurora do final (um é sorteado a cada vez). Vazio: sininhos gerados por código.")]
+        [SerializeField] private AudioClip[] sonsBrilhinhos;
 
         [Header("Checkpoint")]
         [Tooltip("Acesa, guarda o lugar: ao morrer ou apertar R o Marcos renasce aqui, com a fogueira já acesa.")]
@@ -117,6 +121,9 @@ namespace Vertigo.Gameplay
             }
         }
 
+        public AudioClip MusicaFinal => musicaFinal;
+        public AudioClip[] SonsBrilhinhos => sonsBrilhinhos;
+
         private void OnEnable()
         {
             ativas.Add(this);
@@ -147,11 +154,26 @@ namespace Vertigo.Gameplay
         private void Update()
         {
             bool jogadorPronto = jogador != null && jogador.CanInteract && !jogador.InputLocked;
-            bool podeInteragir = jogadorPronto && (!acesa || final);
+            // Com o final em andamento a fogueira não responde mais: a aurora cuida do resto.
+            bool podeInteragir = jogadorPronto && (!acesa || final) && !AuroraFinal.Ativa;
 
             if (podeInteragir && ReadInteractPressed())
             {
-                if (!acesa)
+                if (final)
+                {
+                    // Fim do jogo: o Marcos se senta (acende, se ainda estiver apagada), a aurora o envolve e cobre
+                    // a tela, e aparece a tela de finalização. R recomeça do zero, sem checkpoint.
+                    if (!acesa)
+                    {
+                        acesa = true;
+                        animator.SetTrigger(AcenderHash);
+                    }
+
+                    jogador.BeginSitAnimation();
+                    Checkpoint.Limpar();
+                    AuroraFinal.Iniciar(jogador, musicaFinal, sonsBrilhinhos);
+                }
+                else if (!acesa)
                 {
                     acesa = true;
                     animator.SetTrigger(AcenderHash);
@@ -160,13 +182,6 @@ namespace Vertigo.Gameplay
                     {
                         Checkpoint.Salvar(this, jogador.HasHook);
                     }
-                }
-                else
-                {
-                    // Fim do jogo: o próximo loop começa do zero, sem checkpoint.
-                    Checkpoint.Limpar();
-                    jogador.RestartPrototype();
-                    return;
                 }
 
                 podeInteragir = false;
