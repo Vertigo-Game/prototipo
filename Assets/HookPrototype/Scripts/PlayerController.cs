@@ -109,6 +109,7 @@ namespace HookPrototype
         private static readonly int GroundedHash = Animator.StringToHash("Grounded");
         private static readonly int HookModeHash = Animator.StringToHash("HookMode");
         private static readonly int InteractHash = Animator.StringToHash("Interact");
+        private static readonly int SitHash = Animator.StringToHash("Sit");
         private static readonly int DeadHash = Animator.StringToHash("Dead");
         private static readonly int DeathStateHash = Animator.StringToHash("marcus_death_1");
 
@@ -288,6 +289,15 @@ namespace HookPrototype
             if (animator != null)
             {
                 animator.SetTrigger(InteractHash);
+            }
+        }
+
+        // Estado marcus_sits: o Marcos se senta na fogueira final e fica sentado.
+        public void BeginSitAnimation()
+        {
+            if (animator != null)
+            {
+                animator.SetTrigger(SitHash);
             }
         }
 
