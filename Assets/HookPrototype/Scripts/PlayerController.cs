@@ -208,6 +208,9 @@ namespace HookPrototype
 
         private bool restarting;
 
+        // Raised on every player jump (ground, coyote/buffer, off the rope); drives the jump sound.
+        public event System.Action Jumped;
+
         public bool DashAvailable => dashAvailable;
         // Dash in progress and its direction (-1 left, 1 right); drive the dash wind effect.
         public bool IsDashing => dashTimer > 0f && !dead && !completed;
@@ -342,6 +345,16 @@ namespace HookPrototype
             if (!TryGetComponent(out VentoDash _))
             {
                 gameObject.AddComponent<VentoDash>();
+            }
+
+            if (!TryGetComponent(out SomPulo _))
+            {
+                gameObject.AddComponent<SomPulo>();
+            }
+
+            if (!TryGetComponent(out SomPassos _))
+            {
+                gameObject.AddComponent<SomPassos>();
             }
         }
 
@@ -952,6 +965,7 @@ namespace HookPrototype
             // Consome o buffer e o coyote para o mesmo aperto não gerar um segundo pulo.
             timeSinceGrounded = Never;
             timeSinceJumpPressed = Never;
+            Jumped?.Invoke();
         }
 
         private void ApplyJumpCut()
