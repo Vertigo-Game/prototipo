@@ -6,7 +6,8 @@ namespace Vertigo.UI
 {
     // HUD da Barra de Frio, montado em runtime (arte provisória gerada por código):
     // - frasco vertical no canto superior esquerdo, enchendo de azul de baixo pra cima;
-    // - geada nas bordas da tela que entra a partir de inicioVinheta.
+    // - geada nas bordas da tela que entra a partir de inicioVinheta;
+    // - barra acima do jogador quando a fase tem uma área de início do frio ou ativa essa opção no HUD.
     // O frasco aparece quando há frio, fica um tempo depois de zerar e some.
     [RequireComponent(typeof(BarraDeFrio))]
     public sealed class FrioHud : MonoBehaviour
@@ -15,12 +16,16 @@ namespace Vertigo.UI
         private const float PixelGeada = 2f;
         private const int LarguraFrasco = 12;
         private const int AlturaFrasco = 56;
+        private const float AlturaBarraSobreJogador = 0.9f;
+        private const float SegundosDeFrioParaMostrarBarra = 5f;
         // Linhas do frasco que recebem líquido (de baixo pra cima, em pixels da textura).
         private const int PrimeiraLinhaLiquido = 1;
         private const int UltimaLinhaLiquido = AlturaFrasco - 4;
 
         [Header("Liga/desliga")]
         [SerializeField] private bool mostrarFrasco = true;
+        [SerializeField, Tooltip("Mostra a barra sobre o jogador quando o frio vale desde o início da fase.")]
+        private bool mostrarBarraSobreJogador;
         [SerializeField, Tooltip("Geada nas bordas e tingimento azul da tela.")]
         private bool mostrarGeada = true;
 
@@ -47,6 +52,10 @@ namespace Vertigo.UI
 
         private BarraDeFrio barra;
         private GameObject raiz;
+        private RectTransform canvasRect;
+        private GameObject efeitos;
+        private RectTransform barraSobreJogador;
+        private Image nivelBarraSobreJogador;
         private CanvasGroup grupoFrasco;
         private Image liquido;
         private Image vinheta;
@@ -59,7 +68,7 @@ namespace Vertigo.UI
         {
             barra = GetComponent<BarraDeFrio>();
             MontarHud();
-            raiz.SetActive(!ModoTeste.Ativo);
+            efeitos.SetActive(!ModoTeste.Ativo);
         }
 
         private void OnDestroy()
@@ -80,10 +89,15 @@ namespace Vertigo.UI
 
         private void LateUpdate()
         {
-            bool mostrar = !ModoTeste.Ativo;
-            if (raiz.activeSelf != mostrar)
+            if (barraSobreJogador != null)
             {
-                raiz.SetActive(mostrar);
+                AtualizarBarraSobreJogador();
+            }
+
+            bool mostrar = !ModoTeste.Ativo;
+            if (efeitos.activeSelf != mostrar)
+            {
+                efeitos.SetActive(mostrar);
             }
             if (!mostrar)
             {
@@ -130,6 +144,7 @@ namespace Vertigo.UI
         private void MontarHud()
         {
             raiz = new GameObject("FrioHud", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            canvasRect = (RectTransform)raiz.transform;
             Canvas canvas = raiz.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = ordemCanvas;
@@ -140,12 +155,17 @@ namespace Vertigo.UI
             scaler.referenceResolution = new Vector2(640f, 360f);
             scaler.matchWidthOrHeight = 1f;
 
+            efeitos = new GameObject("Efeitos", typeof(RectTransform));
+            efeitos.transform.SetParent(raiz.transform, false);
+            Esticar((RectTransform)efeitos.transform);
+
             // Tingimento azul no fundo, depois a geada, e por cima o frasco.
-            tingimento = CriarImagem("Tingimento", raiz.transform, CriarSprite(CriarTexturaBranca(), FilterMode.Point));
+            Sprite branco = CriarSprite(CriarTexturaBranca(), FilterMode.Point);
+            tingimento = CriarImagem("Tingimento", efeitos.transform, branco);
             Esticar(tingimento.rectTransform);
             tingimento.enabled = false;
 
-            vinheta = CriarImagem("Geada", raiz.transform, CriarSprite(CriarTexturaGeada(), FilterMode.Point));
+            vinheta = CriarImagem("Geada", efeitos.transform, CriarSprite(CriarTexturaGeada(), FilterMode.Point));
             vinhetaRect = vinheta.rectTransform;
             vinhetaRect.anchorMin = Vector2.zero;
             vinhetaRect.anchorMax = Vector2.one;
@@ -154,7 +174,7 @@ namespace Vertigo.UI
             vinheta.enabled = false;
 
             GameObject frasco = new GameObject("Frasco", typeof(RectTransform), typeof(CanvasGroup));
-            frasco.transform.SetParent(raiz.transform, false);
+            frasco.transform.SetParent(efeitos.transform, false);
             RectTransform frascoRect = (RectTransform)frasco.transform;
             frascoRect.anchorMin = frascoRect.anchorMax = frascoRect.pivot = new Vector2(0f, 1f);
             frascoRect.anchoredPosition = new Vector2(margem.x, -margem.y);
@@ -177,6 +197,56 @@ namespace Vertigo.UI
 
             Image vidro = CriarImagem("Vidro", frasco.transform, CriarSprite(texVidro, FilterMode.Point));
             Esticar(vidro.rectTransform);
+
+            if (mostrarBarraSobreJogador || barra.TemAreaDeInicio)
+            {
+                MontarBarraSobreJogador(branco);
+            }
+        }
+
+        private void MontarBarraSobreJogador(Sprite branco)
+        {
+            Image fundo = CriarImagem("Barra sobre o jogador", raiz.transform, branco);
+            fundo.color = new Color(0f, 0f, 0f, 0.4f);
+            barraSobreJogador = fundo.rectTransform;
+            barraSobreJogador.anchorMin = barraSobreJogador.anchorMax = new Vector2(0.5f, 0.5f);
+            barraSobreJogador.pivot = new Vector2(0.5f, 0f);
+            barraSobreJogador.sizeDelta = new Vector2(30f, 4f);
+
+            nivelBarraSobreJogador = CriarImagem("Nível", barraSobreJogador, branco);
+            nivelBarraSobreJogador.color = corLiquido;
+            RectTransform nivelRect = nivelBarraSobreJogador.rectTransform;
+            Esticar(nivelRect);
+            nivelRect.offsetMin = Vector2.one;
+            nivelRect.offsetMax = -Vector2.one;
+            nivelBarraSobreJogador.type = Image.Type.Filled;
+            nivelBarraSobreJogador.fillMethod = Image.FillMethod.Horizontal;
+            nivelBarraSobreJogador.fillOrigin = (int)Image.OriginHorizontal.Left;
+            barraSobreJogador.gameObject.SetActive(false);
+        }
+
+        private void AtualizarBarraSobreJogador()
+        {
+            bool frioSuficiente = barra.Ativo && barra.SegundosDeFrioAcumulado >= SegundosDeFrioParaMostrarBarra;
+            Camera cameraMundo = frioSuficiente ? Camera.main : null;
+            if (cameraMundo == null)
+            {
+                barraSobreJogador.gameObject.SetActive(false);
+                return;
+            }
+
+            Vector3 mundo = transform.position + Vector3.up * AlturaBarraSobreJogador;
+            Vector3 tela = cameraMundo.WorldToScreenPoint(mundo);
+            if (tela.z <= 0f ||
+                !RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, tela, null, out Vector2 local))
+            {
+                barraSobreJogador.gameObject.SetActive(false);
+                return;
+            }
+
+            barraSobreJogador.anchoredPosition = new Vector2(Mathf.Round(local.x), Mathf.Round(local.y));
+            nivelBarraSobreJogador.fillAmount = 1f - barra.Frio;
+            barraSobreJogador.gameObject.SetActive(true);
         }
 
         private static Image CriarImagem(string nome, Transform pai, Sprite sprite)

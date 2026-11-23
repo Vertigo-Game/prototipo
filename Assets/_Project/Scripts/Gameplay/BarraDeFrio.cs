@@ -9,6 +9,9 @@ namespace Vertigo.Gameplay
     [RequireComponent(typeof(PlayerController))]
     public sealed class BarraDeFrio : MonoBehaviour
     {
+        [SerializeField, Tooltip("Área no mundo onde o frio começa. Se estiver vazia, o frio vale desde o início.")]
+        private Rect areaDeInicio;
+
         [SerializeField, Tooltip("Segundos longe do fogo, de vazio até congelar.")]
         private float tempoParaCongelar = 40f;
 
@@ -22,18 +25,28 @@ namespace Vertigo.Gameplay
 
         // 0 = quentinho, 1 = congelado.
         public float Frio => frio;
+        public bool Ativo { get; private set; }
         public bool Aquecendo { get; private set; }
+        internal bool TemAreaDeInicio => areaDeInicio.width > 0f && areaDeInicio.height > 0f;
+        internal float SegundosDeFrioAcumulado => frio * tempoParaCongelar;
 
         private void Awake()
         {
             jogador = GetComponent<PlayerController>();
             frio = 0f;
+            Ativo = !TemAreaDeInicio || Checkpoint.FrioAtivoNa(gameObject.scene);
         }
 
         private void Update()
         {
             float dt = Time.deltaTime;
             if (dt <= 0f || jogador.IsDead)
+            {
+                return;
+            }
+
+            Ativo = Ativo || areaDeInicio.Contains(transform.position);
+            if (!Ativo)
             {
                 return;
             }
@@ -50,6 +63,15 @@ namespace Vertigo.Gameplay
             if (frio >= 1f && !ModoTeste.Ativo)
             {
                 jogador.Die(CausaDaMorte.Congelamento);
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (TemAreaDeInicio)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawWireCube(areaDeInicio.center, areaDeInicio.size);
             }
         }
     }

@@ -9,18 +9,20 @@ namespace Vertigo.Gameplay
     {
         private static int cena = -1;
         private static string fogueira;
+        private static bool comFrio;
 
         public static bool Ativo { get; private set; }
 
         // Se o Marcos já tinha o gancho quando acendeu a fogueira: ao renascer ele volta com ele.
         public static bool ComGancho { get; private set; }
 
-        public static void Salvar(Fogueira origem, bool comGancho)
+        public static void Salvar(Fogueira origem, bool comGancho, bool frioAtivo)
         {
             Ativo = true;
             cena = origem.gameObject.scene.buildIndex;
             fogueira = origem.name;
             ComGancho = comGancho;
+            comFrio = frioAtivo;
         }
 
         public static bool Eh(Fogueira candidata)
@@ -41,6 +43,11 @@ namespace Vertigo.Gameplay
             return Ativo && ComGancho && cena == alvo.buildIndex;
         }
 
+        internal static bool FrioAtivoNa(Scene alvo)
+        {
+            return Ativo && comFrio && cena == alvo.buildIndex;
+        }
+
         // Sem domain reload ao entrar no Play, o estático ficaria da sessão anterior.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void Limpar()
@@ -49,6 +56,7 @@ namespace Vertigo.Gameplay
             cena = -1;
             fogueira = null;
             ComGancho = false;
+            comFrio = false;
         }
     }
 }

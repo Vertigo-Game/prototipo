@@ -180,7 +180,8 @@ namespace Vertigo.Gameplay
                     jogador.BeginInteractAnimation();
                     if (checkpoint)
                     {
-                        Checkpoint.Salvar(this, jogador.HasHook);
+                        bool frioAtivo = jogador.TryGetComponent(out BarraDeFrio barra) && barra.Ativo;
+                        Checkpoint.Salvar(this, jogador.HasHook, frioAtivo);
                     }
                 }
 
