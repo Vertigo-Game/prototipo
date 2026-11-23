@@ -214,6 +214,9 @@ namespace HookPrototype
         // Raised once on any death (enemy, spikes, fall, cold); drives the death sound.
         public event System.Action Died;
 
+        // Raised when a launched hook catches a target (enemy or fixed point); drives the impact sparks and clank.
+        public event System.Action<HookTarget> HookAttached;
+
         public bool DashAvailable => dashAvailable;
         // Dash in progress and its direction (-1 left, 1 right); drive the dash wind effect.
         public bool IsDashing => dashTimer > 0f && !dead && !completed;
@@ -363,6 +366,11 @@ namespace HookPrototype
             if (!TryGetComponent(out SomMorte _))
             {
                 gameObject.AddComponent<SomMorte>();
+            }
+
+            if (!TryGetComponent(out ImpactoGancho _))
+            {
+                gameObject.AddComponent<ImpactoGancho>();
             }
         }
 
@@ -1141,6 +1149,7 @@ namespace HookPrototype
 
             aimLine.enabled = true;
             currentTarget.NotifyHooked();
+            HookAttached?.Invoke(currentTarget);
             if (sons != null)
             {
                 sons.TocarConexao();
