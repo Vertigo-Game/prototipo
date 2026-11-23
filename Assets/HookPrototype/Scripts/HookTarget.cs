@@ -35,9 +35,6 @@ namespace HookPrototype
         /// what happens next (e.g. hiding it until it respawns); without one the enemy is destroyed.</summary>
         public event Action Captured;
 
-        /// <summary>Raised when touching this enemy kills the player.</summary>
-        public event Action KilledPlayer;
-
         public void Configure(bool enemy)
         {
             isEnemy = enemy;
@@ -51,11 +48,6 @@ namespace HookPrototype
         public void NotifyReleased()
         {
             Released?.Invoke();
-        }
-
-        public void NotifyKilledPlayer()
-        {
-            KilledPlayer?.Invoke();
         }
 
         public void Capture()

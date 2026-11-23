@@ -178,6 +178,10 @@ namespace HookPrototype
         private bool corpseFrozen;
 
         public bool IsDead => dead;
+
+        // Running on the ground (drives the footstep dust). airTime comes from the physics step: zero = standing on something.
+        public bool IsRunningOnGround => !dead && !completed && !climbing && !pulling && airTime <= 0f &&
+                                         Mathf.Abs(body.linearVelocity.x) > 1f;
         public bool CanGrabRope => !dead && !climbing && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f &&
                                    Time.time - ropeReleaseTime >= ropeRegrabDelay;
         public Bounds BodyBounds => bodyCollider.bounds;
@@ -206,7 +210,19 @@ namespace HookPrototype
 
         private bool restarting;
 
+        // Raised on every player jump (ground, coyote/buffer, off the rope); drives the jump sound.
+        public event System.Action Jumped;
+
+        // Raised once on any death (enemy, spikes, fall, cold); drives the death sound.
+        public event System.Action Died;
+
+        // Raised when a launched hook catches a target (enemy or fixed point); drives the impact sparks and clank.
+        public event System.Action<HookTarget> HookAttached;
+
         public bool DashAvailable => dashAvailable;
+        // Dash in progress and its direction (-1 left, 1 right); drive the dash wind effect.
+        public bool IsDashing => dashTimer > 0f && !dead && !completed;
+        public float DashDirection => dashDirection;
         public bool IsPulling => pulling;
         public bool CanInteract => !dead && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
 
@@ -327,6 +343,37 @@ namespace HookPrototype
             aimLine.material = aimMaterial;
             aimLine.enabled = false;
             CreateCableMaterial();
+
+            // The player is placed straight into each scene (no prefab), so the effects come with default values.
+            if (!TryGetComponent(out PoeiraPassos _))
+            {
+                gameObject.AddComponent<PoeiraPassos>();
+            }
+
+            if (!TryGetComponent(out VentoDash _))
+            {
+                gameObject.AddComponent<VentoDash>();
+            }
+
+            if (!TryGetComponent(out SomPulo _))
+            {
+                gameObject.AddComponent<SomPulo>();
+            }
+
+            if (!TryGetComponent(out SomPassos _))
+            {
+                gameObject.AddComponent<SomPassos>();
+            }
+
+            if (!TryGetComponent(out SomMorte _))
+            {
+                gameObject.AddComponent<SomMorte>();
+            }
+
+            if (!TryGetComponent(out ImpactoGancho _))
+            {
+                gameObject.AddComponent<ImpactoGancho>();
+            }
         }
 
         private void OnDestroy()
@@ -943,6 +990,7 @@ namespace HookPrototype
             // Consome o buffer e o coyote para o mesmo aperto não gerar um segundo pulo.
             timeSinceGrounded = Never;
             timeSinceJumpPressed = Never;
+            Jumped?.Invoke();
         }
 
         private void ApplyJumpCut()
@@ -1110,6 +1158,7 @@ namespace HookPrototype
 
             aimLine.enabled = true;
             currentTarget.NotifyHooked();
+            HookAttached?.Invoke(currentTarget);
             if (sons != null)
             {
                 sons.TocarConexao();
@@ -1477,10 +1526,6 @@ namespace HookPrototype
             if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
             {
                 Die(CausaDaMorte.Perigo);
-                if (dead)
-                {
-                    target.NotifyKilledPlayer();
-                }
             }
         }
 
@@ -1544,6 +1589,7 @@ namespace HookPrototype
             }
 
             TelaGameOver.Mostrar();
+            Died?.Invoke();
         }
 
         // O collider em pé deixaria o corpo deitado flutuando (e preso em beiradas): vira um collider

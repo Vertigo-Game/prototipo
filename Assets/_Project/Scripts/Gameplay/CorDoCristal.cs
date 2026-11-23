@@ -22,6 +22,15 @@ namespace Vertigo.Gameplay
 
         public PerfilVisualInimigo Perfil => perfil;
 
+        // Cor com que o cristal aparece agora, se ele estiver recolorido (senão vale a cor original do sprite).
+        public bool TentarCorVisivel(out Color corVisivel)
+        {
+            corVisivel = CorDoShader();
+            bool recolorido = corVisivel.a > 0f;
+            corVisivel.a = 1f;
+            return recolorido;
+        }
+
         private void OnEnable()
         {
             visual = GetComponent<SpriteRenderer>();
