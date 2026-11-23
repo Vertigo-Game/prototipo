@@ -4,14 +4,13 @@ using UnityEngine;
 namespace Vertigo.Gameplay
 {
     // Sons da esfera de cristal: as pontas se recolhem quando o gancho prende nela e voltam a sair
-    // quando o gancho solta (uma vez por mudança, esteja o Marcos preso ou não). Encostar nela com
-    // as pontas para fora mata, e o som de morte toca uma vez nesse contato.
+    // quando o gancho solta (uma vez por mudança, esteja o Marcos preso ou não). O som de quando ela
+    // mata o Marcos é o mesmo de qualquer morte e fica no jogador (SomMorte).
     [RequireComponent(typeof(HookTarget))]
     public sealed class SonsEsfera : MonoBehaviour
     {
         [SerializeField] private AudioClip pontasEntrando;
         [SerializeField] private AudioClip pontasSaindo;
-        [SerializeField] private AudioClip morte;
         [SerializeField, Range(0f, 1f)] private float volume = 1f;
 
         private HookTarget alvo;
@@ -29,14 +28,12 @@ namespace Vertigo.Gameplay
         {
             alvo.Hooked += AoSerFisgada;
             alvo.Released += AoSerSolta;
-            alvo.KilledPlayer += AoMatarJogador;
         }
 
         private void OnDisable()
         {
             alvo.Hooked -= AoSerFisgada;
             alvo.Released -= AoSerSolta;
-            alvo.KilledPlayer -= AoMatarJogador;
         }
 
         private void AoSerFisgada()
@@ -47,11 +44,6 @@ namespace Vertigo.Gameplay
         private void AoSerSolta()
         {
             Tocar(pontasSaindo);
-        }
-
-        private void AoMatarJogador()
-        {
-            Tocar(morte);
         }
 
         private void Tocar(AudioClip clipe)

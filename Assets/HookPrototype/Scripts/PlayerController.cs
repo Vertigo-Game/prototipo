@@ -211,6 +211,9 @@ namespace HookPrototype
         // Raised on every player jump (ground, coyote/buffer, off the rope); drives the jump sound.
         public event System.Action Jumped;
 
+        // Raised once on any death (enemy, spikes, fall, cold); drives the death sound.
+        public event System.Action Died;
+
         public bool DashAvailable => dashAvailable;
         // Dash in progress and its direction (-1 left, 1 right); drive the dash wind effect.
         public bool IsDashing => dashTimer > 0f && !dead && !completed;
@@ -355,6 +358,11 @@ namespace HookPrototype
             if (!TryGetComponent(out SomPassos _))
             {
                 gameObject.AddComponent<SomPassos>();
+            }
+
+            if (!TryGetComponent(out SomMorte _))
+            {
+                gameObject.AddComponent<SomMorte>();
             }
         }
 
@@ -1500,10 +1508,6 @@ namespace HookPrototype
             if (target != null && target.IsEnemy && !(pulling && target == currentTarget))
             {
                 Die(CausaDaMorte.Perigo);
-                if (dead)
-                {
-                    target.NotifyKilledPlayer();
-                }
             }
         }
 
@@ -1567,6 +1571,7 @@ namespace HookPrototype
             }
 
             TelaGameOver.Mostrar();
+            Died?.Invoke();
         }
 
         // O collider em pé deixaria o corpo deitado flutuando (e preso em beiradas): vira um collider
