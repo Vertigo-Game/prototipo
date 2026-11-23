@@ -18,14 +18,14 @@ namespace Vertigo.Gameplay
         [SerializeField] private Color corFinal = new Color(0.45f, 0.45f, 0.47f, 1f);
 
         [Header("Faíscas ao acender")]
-        [SerializeField, Min(0)] private int quantidade = 24;
+        [SerializeField, Min(0)] private int quantidade = 14;
         [Tooltip("Faíscas extras logo depois da primeira leva, enquanto o fogo pega.")]
-        [SerializeField, Min(0)] private int quantidadeExtra = 8;
+        [SerializeField, Min(0)] private int quantidadeExtra = 4;
         [Tooltip("Velocidade lateral máxima (para cada lado).")]
-        [SerializeField, Min(0f)] private float velocidadeLateral = 2.2f;
+        [SerializeField, Min(0f)] private float velocidadeLateral = 1.5f;
         [Tooltip("Velocidade para cima: mínima e máxima.")]
-        [SerializeField] private Vector2 velocidadeSubida = new Vector2(1f, 4.2f);
-        [SerializeField] private Vector2 duracao = new Vector2(0.45f, 1.1f);
+        [SerializeField] private Vector2 velocidadeSubida = new Vector2(0.8f, 3f);
+        [SerializeField] private Vector2 duracao = new Vector2(0.4f, 0.9f);
         [SerializeField, Min(0f)] private float gravidade = 0.55f;
 
         [Header("Brasas enquanto acesa")]
@@ -41,7 +41,7 @@ namespace Vertigo.Gameplay
         [Header("Som")]
         [Tooltip("Som do fogo acendendo. Vazio: usa um gerado por código (chiado do fogo pegando + estalos).")]
         [SerializeField] private AudioClip somAcender;
-        [SerializeField, Range(0f, 1f)] private float volume = 0.8f;
+        [SerializeField, Range(0f, 1f)] private float volume = 0.45f;
 
         private static AudioClip somGerado;
         private static Material materialFaiscas;
