@@ -46,6 +46,7 @@ namespace Vertigo.Gameplay
         [SerializeField] private float duracaoFadeAviso = 0.25f;
 
         private Animator animator;
+        private EfeitosFogueira efeitos;
         private PlayerController jogador;
         private RectTransform avisoRect;
         private RectTransform avisoPai;
@@ -77,6 +78,12 @@ namespace Vertigo.Gameplay
         private void Awake()
         {
             animator = GetComponent<Animator>();
+            // Várias fogueiras foram montadas direto nas cenas, sem o prefab: os efeitos entram aqui com os valores padrão.
+            if (!TryGetComponent(out efeitos))
+            {
+                efeitos = gameObject.AddComponent<EfeitosFogueira>();
+            }
+
             renasceAqui = checkpoint && Checkpoint.Eh(this);
 
             if (comecaAcesa || renasceAqui)
@@ -84,6 +91,7 @@ namespace Vertigo.Gameplay
                 // Pula direto para o estado em loop, sem passar pela animação de acender.
                 acesa = true;
                 animator.Play(EstadoAcesaHash);
+                efeitos.ComecarAcesa();
             }
 
             if (aviso != null)
@@ -165,8 +173,7 @@ namespace Vertigo.Gameplay
                     // a tela, e aparece a tela de finalização. R recomeça do zero, sem checkpoint.
                     if (!acesa)
                     {
-                        acesa = true;
-                        animator.SetTrigger(AcenderHash);
+                        Acender();
                     }
 
                     jogador.BeginSitAnimation();
@@ -175,8 +182,7 @@ namespace Vertigo.Gameplay
                 }
                 else if (!acesa)
                 {
-                    acesa = true;
-                    animator.SetTrigger(AcenderHash);
+                    Acender();
                     jogador.BeginInteractAnimation();
                     if (checkpoint)
                     {
@@ -193,6 +199,14 @@ namespace Vertigo.Gameplay
                 float alvo = podeInteragir ? 1f : 0f;
                 aviso.alpha = Mathf.MoveTowards(aviso.alpha, alvo, Time.unscaledDeltaTime / duracaoFadeAviso);
             }
+        }
+
+        // Acendida pelo jogador: animação de acender, faíscas e som. (Começar acesa pula tudo isso.)
+        private void Acender()
+        {
+            acesa = true;
+            animator.SetTrigger(AcenderHash);
+            efeitos.Acender();
         }
 
         private void LateUpdate()
