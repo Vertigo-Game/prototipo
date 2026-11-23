@@ -12,6 +12,7 @@ namespace HookPrototype
         [SerializeField] private float minimumY = 1.4f;
         [SerializeField] private bool followHorizontally;
         [SerializeField] private float horizontalSmoothTime = 0.18f;
+        [SerializeField] private bool snapOnStart;
 
         private float verticalVelocity;
         private float horizontalVelocity;
@@ -21,6 +22,14 @@ namespace HookPrototype
         {
             target = followTarget;
             targetPlayer = null;
+        }
+
+        private void Start()
+        {
+            if (snapOnStart)
+            {
+                Encaixar();
+            }
         }
 
         private void LateUpdate()

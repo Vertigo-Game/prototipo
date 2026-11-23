@@ -27,6 +27,8 @@ namespace HookPrototype
         [SerializeField] private float groundAcceleration = 55f;
         [SerializeField] private float airAcceleration = 16f;
         [SerializeField] private float fallLimit = -5f;
+        [SerializeField, Tooltip("Tiles de fundo que protegem o jogador do limite de queda.")]
+        private Tilemap fallLimitExclusionTilemap;
 
         [Header("Jump")]
         [Tooltip("Altura máxima do pulo segurando o espaço, em tiles. A velocidade é calculada a partir da gravidade.")]
@@ -385,7 +387,7 @@ namespace HookPrototype
             if (dead)
             {
                 // Corpo que caiu num buraco fica parado onde passou do limite, à vista da câmera.
-                if (!corpseFrozen && transform.position.y < fallLimit)
+                if (!corpseFrozen && IsInFallDeathZone())
                 {
                     FreezeCorpse();
                 }
@@ -487,7 +489,7 @@ namespace HookPrototype
                 StartDash();
             }
 
-            if (transform.position.y < fallLimit)
+            if (IsInFallDeathZone())
             {
                 Die(CausaDaMorte.Queda);
                 return;
@@ -495,6 +497,13 @@ namespace HookPrototype
 
             previousHookHeld = hookHeld;
             UpdateAnimation();
+        }
+
+        private bool IsInFallDeathZone()
+        {
+            Vector3 position = transform.position;
+            return position.y < fallLimit && (fallLimitExclusionTilemap == null ||
+                !fallLimitExclusionTilemap.HasTile(fallLimitExclusionTilemap.WorldToCell(position)));
         }
 
         private void FixedUpdate()
