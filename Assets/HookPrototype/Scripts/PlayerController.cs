@@ -209,6 +209,9 @@ namespace HookPrototype
         private bool restarting;
 
         public bool DashAvailable => dashAvailable;
+        // Dash in progress and its direction (-1 left, 1 right); drive the dash wind effect.
+        public bool IsDashing => dashTimer > 0f && !dead && !completed;
+        public float DashDirection => dashDirection;
         public bool IsPulling => pulling;
         public bool CanInteract => !dead && !aiming && !pulling && !coasting && !completed && dashTimer <= 0f && IsGrounded();
 
@@ -330,10 +333,15 @@ namespace HookPrototype
             aimLine.enabled = false;
             CreateCableMaterial();
 
-            // The player is placed straight into each scene (no prefab), so the dust comes with default values.
+            // The player is placed straight into each scene (no prefab), so the effects come with default values.
             if (!TryGetComponent(out PoeiraPassos _))
             {
                 gameObject.AddComponent<PoeiraPassos>();
+            }
+
+            if (!TryGetComponent(out VentoDash _))
+            {
+                gameObject.AddComponent<VentoDash>();
             }
         }
 
